@@ -1,7 +1,6 @@
 
 ## 关于我们
 
-+ 整个项目已经从<https://dataxujing.github.io/CNN-paper/>迁到<https://dataxujing.github.io/CNN-paper2/#/>
 + 个人主页:https://dataxujing.github.io/
 
 ------
@@ -17,35 +16,6 @@
 
 |    日期              |   更新内容                |
 |:--------------------:|:------------------------:|
-|2017-01-01~2019-03-17 |  CV基础知识               |
-|2019-03-17            |  DenseNets               |
-|2019-03-18            | Faster R-CNN             |
-|2019-03-19            | YOLO V1                  |
-|2019-03-20            | SSD,目标检测资源          |
-|2019-03-21            |SENet,ResNeXt,目标检测资源 |
-|2019-03-22            |YOLO V2, YOLO9000         |
-|2019-03-23            |YOLO V3                   | 
-|2019-03-30            |MobileNet V1,V2,Xception  |
-|2019-03-31            |MobileNet V1,V2           |
-|2019-05-01            |ShuffleNet V1,v2          |
-|2019-05-05            |SqueezeNet                |
-|2019-05-06            |EffNet                    |
-|2019-06-12            |R-FCN                     |
-|2019-08-03            |FCN                       |
-|2019-08-04            |FPN                       |
-|2019-08-04            |实例分割，语义分割标注工具   |
-|2019-08-04            |RetinaNet                 |
-|2019-08-06            |Mask R-CNN                |
-|2019-08-07            |Pelee                     |
-|2019-08-10            |Light-Head R-CNN          |
-|2019-08-21            |Cascade R-CNN             |
-|2019-08-21            |Mask scoring R-CNN        |
-|2019-08-23            |VGG 16-19，A Neural Algorithm of Artistic Style|
-|2019-08-25            |YOLACT                    |
-|2019-08-29            |Fast Neural Style Transfer|
-|2019-09-15            | 人体姿态估计沙漏网络       |
-|2019-09-20            | CornerNet                |
-|2019-09-26            | ExtremeNet               |
-|2019-10-10            | CenterNet                |
-|2019-10-14            | FoveaBox                 |
-|2019-10-15            | CornerNet-lite           |
+|2020-05-23            |  word2vec                |
+|2020-05-27            |  GloVe                   |
+

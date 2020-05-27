@@ -1,19 +1,26 @@
 ![logo](_media/icon.svg)
 
-# 深度卷积神经网络教程
+# 自然语言处理(NLP)
 <!-- ## DeepLearning-CNN -->
 
-> 详细的深度卷积网络及其应用的教程
+> 自然语言处理教程
 
-* -图像识别
-* -目标检测
-* -语义分割
-* -实例分割
-* -人脸识别
-* -神经风格转换
-* -生成对抗
+<!-- * - word2vec
+* - GloVe
+* - fastText
+* - TextCNN
+* - ELMO
+* - GPT(GPT2)
+* - XLNet
+* - Bert(ALBert,Bert-wwm, Robert,ERNIE,DustilBert),RoBert
+* - CRF
+* - LDA
+* - LSA, pLSA
+* - Attention
+* - Transformor
+* - seq2seq
+ -->
 
 
-
-[GitHub](https://github.com/DataXujing/CNN-paper2)
+[GitHub](https://github.com/DataXujing/NLP-paper)
 [Get Started](/zh-cn/index)

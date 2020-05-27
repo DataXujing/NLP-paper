@@ -1,3 +1,0 @@
-source
-
-https://github.com/VCBE123/AnchorFreeDetection

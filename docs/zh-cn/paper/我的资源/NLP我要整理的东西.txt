@@ -1,0 +1,14 @@
+word2vec（NNLM，LBL，RNNLM，C&W，CBOW和skip-gram）
+GloVe
+fastText
+ELMO
+GPT(GPT2)
+textCNN
+XLNet
+Bert(ALBert, Bert-wwm, Robert,ERNIE,DustilBert)RoBert
+CRF
+LDA
+LSA, pLSA
+Attention(transformor)
+VAE
+seq2seq
