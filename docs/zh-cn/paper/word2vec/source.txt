@@ -1,0 +1,74 @@
+https://mp.weixin.qq.com/s/LngE10Hnqe9bgFzpNfUwLQ    (NLP中的词向量对比：word2vec/glove/fastText/elmo/GPT/bert)
+
+1. https://mp.weixin.qq.com/s/L-UH9t-sFA3BOw3wCkSeiA   (机器学习竞赛必备基础知识—Word2Vec)
+2. https://mp.weixin.qq.com/s/E9t1QFiJpsuZXlohFkcCmg  (word2vec模型深度解析)
+3.https://mp.weixin.qq.com/s/BebPOfsdicSj4XwTo-OEJA   （全面理解N-Gram语言模型）
+4.https://mp.weixin.qq.com/s?__biz=Mzg4ODA3OTcyNA==&mid=2247484550&amp;idx=1&amp;sn=314b20e0c11be60a55a5a4ed421cbca8&source=41#wechat_redirect      （图解Word2vec，读这一篇就够了）
+
+https://blog.csdn.net/u010213393/article/details/40987945  （BoW）
+https://blog.csdn.net/Jaster_wisdom/article/details/81539623  (Bag-of-words 词袋模型基本原理)
+https://mp.weixin.qq.com/s?__biz=MzI4Mzc5NjI3MQ==&mid=2247494304&amp;idx=2&amp;sn=58f15d0b8f9069c5e95ee0eae604d560&source=41#wechat_redirect   (深入机器学习系列之Word2Vec)
+
+https://mp.weixin.qq.com/s/YdFpfukayP9VGvO0yKNj6w  (图解word2vec（原文翻译）)
+
+https://mp.weixin.qq.com/s/sWN5xt622ViSFuqkfwuk_Q  (Embedding从入门到专家必读的十篇论文)
+
+https://www.toutiao.com/a6722729163389665795/?tt_from=weixin&utm_campaign=client_share&wxshare_count=1&timestamp=1565260284&app=news_article&utm_source=weixin&utm_medium=toutiao_android&req_id=201908081831230100210420956965755&group_id=6722729163389665795
+(使用word2vec构建推荐系统)
+
+
+https://mp.weixin.qq.com/s/lANKP0dUHs27VEZtziQaQQ   (理解 Word2Vec 之 Skip-Gram 模型【全】)
+
+https://mp.weixin.qq.com/s/ZiPWbSmr0Ba-CtydLDmEMQ    (通俗理解 Word2Vec 之 Skip-Gram 模型[一])
+
+https://mp.weixin.qq.com/s/6sJ5iLUSpAh4WXG0sB0qIg  (从Word2Vec到Bert，聊聊词向量的前世今生（一）)
+
+https://mp.weixin.qq.com/s/AgvtB19NBtQ945vsT0PVXA  (万物皆Embedding，从经典的word2vec到深度学习基本操作item2vec)
+
+https://mp.weixin.qq.com/s/5zShpQm-RJecjIv-PFPilA   (如何产生好的词向量？)
+
+
+https://www.toutiao.com/a6732063020014371331/?tt_from=weixin&utm_campaign=client_share&wxshare_count=1&timestamp=1567477310&app=news_article&utm_source=weixin&utm_medium=toutiao_android&req_id=201909031021490100240971736640D75&group_id=6732063020014371331
+(词嵌入以及word2vec的介绍)
+
+https://mp.weixin.qq.com/s/tEDSbLyXkFQc-9FeoXix9w   (【NLP】doc2vec原理及实践)
+
+
+https://www.toutiao.com/a6742308194170700295/?tt_from=weixin&utm_campaign=client_share&wxshare_count=1&timestamp=1569843239&app=news_article&utm_source=weixin&utm_medium=toutiao_android&req_id=20190930193359010026077209365DA506&group_id=6742308194170700295
+(四张导图学习word2vec中的数学)
+
+
+https://mp.weixin.qq.com/s/hfAEgSS1PTZbO1ls-1Rs2g (NLP实战-Tensorflow词向量训练实战)
+
+https://mp.weixin.qq.com/s/72bNiX8MesA82pthoGgqCQ  (词嵌入Word2Vec**)
+
+https://mp.weixin.qq.com/s/P0MXhMBjt41WflAMGtFr-g   (从 Word2Vec 到 BERT)
+
+https://mp.weixin.qq.com/s/g0LN2YBiyIS_DE9Bm_Rhzg   (从Word Embedding到Bert：自然语言处理预训练技术发展史)
+https://mp.weixin.qq.com/s/qIBtAXDoTsP7yhbcNuuKHg  (文本挖掘从小白到精通（六）---word2vec的训练、使用和可视化)
+
+https://mp.weixin.qq.com/s/oIxCPNXEUEvnjC0ESNQvCg  (图解Word2vec)
+
+https://mp.weixin.qq.com/s/eaiZDWALxym1Vt5qWx5n7A (从零开始学自然语言处理（十三）——CBOW原理详解)
+
+https://mp.weixin.qq.com/s/_6eH3rw0QCBD2v0TI0RU3w  (NLP】词嵌入之Word2vec)
+
+http://tangshusen.me/Dive-into-DL-PyTorch/#/chapter10_natural-language-processing/10.1_word2vec?nsukey=Ch4coeMmjF80z06M9ex%2Bx5RApropbMXXVkjSmjvshlJfVoC9gY5rO%2FcZt7POa6cIYplY1Bn4RNzFd%2BSomc4kD8W8J97ePHsdFb0MwA4aE1SgRQH%2Fvl1CS1EZKR2H7Kg7nZsQlWvkXWwpV2SRWO%2FwavTSJ5nVlLqhlfeH%2BCczP%2F26qiE4Lpat3MJ3OavBzhVI8wOfI57StNpDXhd7lBeU4Q%3D%3D
+
+https://www.zybuluo.com/Dounm/note/591752 (Word2Vec-知其然知其所以然**)
+
+https://github.com/DataXujing/Word-Embedding
+https://github.com/graykode/nlp-tutorial
+
+https://www.jianshu.com/p/edbeeda5d746 （NLP（四）神经网络词向量表示技术））
+
+
+https://www.toutiao.com/i6830054985372271115/?tt_from=weixin&utm_campaign=client_share&wxshare_count=1&timestamp=1590281850&app=news_article&utm_source=weixin&utm_medium=toutiao_android&use_new_style=0&req_id=202005240857300100140510791F38C2F2&group_id=6830054985372271115
+
+（）2020年NLP所有领域最新、经典、顶会、必读论文整理分享）
+
+https://willsonn.github.io/gb/?q=
+
+
+
+

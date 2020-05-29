@@ -5,13 +5,15 @@
 * [3.fastText](zh-cn/03_fastText.md)
 * [4.TextCNN](zh-cn/04_TextCNN.md)
 * [5.ELMO](zh-cn/05_EMLO.md)
-* [6.GPT](zh-cn/06_GPT.md)
+* [6.GPT,GPT2](zh-cn/06_GPT.md)
 * [7.Bert](zh-cn/07_Bert.md)
 * [8.XLNet](zh-cn/08_XLNet.md)
 * [9.CRF](zh-cn/09_CRF.md)
 * [10.LDA](zh-cn/10_LDA.md)
-* [11.LSA,pLSA](zh-cn/11_LSA.md)
+* [11.LSA,pLSA，LSI](zh-cn/11_LSA.md)
 * [12.Attention](zh-cn/12_Attention.md)
 * [13.Transformer](zh-cn/13_Transformer.md)
 * [14.seq2seq](zh-cn/14_seq2seq.md)
+* [15.TextRank,PageRank](zh-cn/15_pangerank.md)
+
 

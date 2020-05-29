@@ -8,7 +8,8 @@ XLNet
 Bert(ALBert, Bert-wwm, Robert,ERNIE,DustilBert)RoBert
 CRF
 LDA
-LSA, pLSA
+LSA, pLSA,LSI
 Attention(transformor)
 VAE
 seq2seq
+TextRank，PageRank
