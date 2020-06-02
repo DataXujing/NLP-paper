@@ -15,17 +15,20 @@ HomePage: [https://dataxujing.github.io/](https://dataxujing.github.io/)
 
 ### 目录
 
-* - word2vec
-* - GloVe
-* - fastText
-* - TextCNN
-* - ELMO
-* - GPT(GPT2)
-* - XLNet
-* - Bert(ALBert,Bert-wwm, Robert,ERNIE,DustilBert),RoBert
-* - CRF
-* - LDA
-* - LSA, pLSA
-* - Attention
-* - Transformor
-* - seq2seq
+* [关于](zh-cn/about)
+* [0.主页](zh-cn/index)
+* [1.word2vec](zh-cn/01_word2vec.md)
+* [2.GloVe](zh-cn/02_GloVe.md)
+* [3.fastText](zh-cn/03_fastText.md)
+* [4.TextCNN](zh-cn/04_TextCNN.md)
+* [5.ELMO](zh-cn/05_EMLO.md)
+* [6.GPT,GPT-2,GPT-3](zh-cn/06_GPT.md)
+* [7.Bert系列](zh-cn/07_Bert.md)
+* [8.XLNet](zh-cn/08_XLNet.md)
+* [9.CRF](zh-cn/09_CRF.md)
+* [10.LSA(LSI),pLSA(pLSI)](zh-cn/10_LSA.md)
+* [11.LDA,lda2vec](zh-cn/11_LDA.md)
+* [12.TextRank,PageRank](zh-cn/12_pangerank.md)
+* [13.Attention机制](zh-cn/13_Attention.md)
+* [14.Transformer](zh-cn/14_Transformer.md)
+* [15.seq2seq](zh-cn/15_seq2seq.md)
