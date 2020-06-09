@@ -1,4 +1,4 @@
-## LDA和lda2vec
+## LDA
 
 <!-- https://zhuanlan.zhihu.com/p/31470216 -->
 <!-- https://www.jianshu.com/p/5be5eeb34d35 -->
@@ -316,8 +316,284 @@ $$p(X)Q(X\to Y)=p(Y)Q(Y\to X)$$
 
 ### 4.文本建模
 
+我们日常生活中总是产生大量的文本，如果每一个文本存储为一篇文档，那每篇文档从人的观察来说就是有序的词的序列$d=(w_1,w_2,...,w_n)$
+
+<div align=center>
+    <img src="zh-cn/img/lda/p29.png" /> 
+</div>
+
+统计文本建模的目的就是追问这些观察到语料库中的的词序列是如何生成的。统计学被人们描述为猜测上帝的游戏，人类产生的所有的语料文本我们都可以看成是一个伟大的上帝在天堂中抛掷骰子生成的，我们观察到的只是上帝玩这个游戏的结果——词序列构成的语料，而上帝玩这个游戏的过程对我们是个黑盒子。所以在统计文本建模中，我们希望猜测出上帝是如何玩这个游戏的，具体一点，最核心的两个问题是
+
++ 上帝都有什么样的骰子；
++ 上帝是如何抛掷这些骰子的；
+
+第一个问题就是表示模型中都有哪些参数，骰子的每一个面的概率都对应于模型中的参数；第二个问题就表示游戏规则是什么，上帝可能有各种不同类型的骰子，上帝可以按照一定的规则抛掷这些骰子从而产生词序列。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p30.png" /> 
+</div>
+
+#### 1.Unigram Model
+
+假设我们的词典中一共有$V$个词 $v_1,v_2,...,v_V$，那么最简单的 Unigram Model 就是认为上帝是按照如下的游戏规则产生文本的。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p31.png" /> 
+</div>
+
+上帝的这个唯一的骰子各个面的概率记为$\overrightarrow{p}=(p_1,p_2,...,p_V)$ , 所以每次投掷骰子类似于一个抛钢镚时候的贝努利实验， 记为$w\sim  Mult(w|\overrightarrow{p})$。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p32.png" /> 
+</div>
+
+对于一篇文档$d=\overrightarrow{w}=(w_1,w_2,...,w_n)$, 该文档被生成的概率就是
+$$p(\overrightarrow{w})=p(w_1,w_2,...,w_n)=p(w_1)p(w_2)...p(w_n)$$
+而文档和文档之间我们认为是独立的， 所以如果语料中有多篇文档$W=(\overrightarrow{w_1},\overrightarrow{w_2},...,\overrightarrow{w_m})$,则该语料的概率是
+$$p(W)=p(\overrightarrow{w_1})p(\overrightarrow{w_2})...p(\overrightarrow{w_n})$$
+在 Unigram Model 中， 我们假设了文档之间是独立可交换的，而文档中的词也是独立可交换的，所以一篇文档相当于一个袋子，里面装了一些词，而词的顺序信息就无关紧要了，这样的模型也称为**词袋模型(Bag-of-words)**。
+
+假设语料中总的词频是$N$, 在所有的$N$个词中,如果我们关注每个词 $v_i$的发生次数$n_i$，那么$\overrightarrow{n}=(n_1,n_2,...,n_V)$正好是一个多项分布
+
+<div align=center>
+    <img src="zh-cn/img/lda/p33.png" /> 
+</div>
+
+此时， 语料的概率是
+
+<div align=center>
+    <img src="zh-cn/img/lda/p34.png" /> 
+</div>
+
+当然，我们很重要的一个任务就是估计模型中的参数$\overrightarrow{p}$，也就是问上帝拥有的这个骰子的各个面的概率是多大，按照统计学家中频率派的观点，使用最大似然估计最大化$p(W)$，于是参数$p_i$的估计值就是
+$$\hat{p_i}=\frac{n_i}{N}$$
+
+对于以上模型，贝叶斯统计学派的统计学家会有不同意见，他们会很挑剔的批评只假设上帝拥有唯一一个固定的骰子是不合理的。在贝叶斯学派看来，一切参数都是随机变量，以上模型中的骰子$\overrightarrow{p}$不是唯一固定的，它也是一个随机变量。所以按照贝叶斯学派的观点，上帝是按照以下的过程在玩游戏的
+
+<div align=center>
+    <img src="zh-cn/img/lda/p35.png" /> 
+</div>
+
+上帝的这个坛子里面，骰子可以是无穷多个，有些类型的骰子数量多，有些类型的骰子少，所以从概率分布的角度看，坛子里面的骰子$\overrightarrow{p}$服从一个概率分布$p(\overrightarrow{p})$，这个分布称为参数$\overrightarrow{p}$的先验分布。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p36.png" /> 
+</div>
+
+以上贝叶斯学派的游戏规则的假设之下，语料$W$产生的概率如何计算呢？由于我们并不知道上帝到底用了哪个骰子$\overrightarrow{p}$,所以每个骰子都是可能被使用的，只是使用的概率由先验分布$p(\overrightarrow{p})$来决定。对每一个具体的骰子$\overrightarrow{p}$,由该骰子产生数据的概率是 $p(W|\overrightarrow{p})$, 所以最终数据产生的概率就是对每一个骰子$\overrightarrow{p}$上产生的数据概率进行积分累加求和
+$$p(W)=\int p(W|\overrightarrow{p})p(\overrightarrow{p})d\overrightarrow{p}$$
+
+在贝叶斯分析的框架下，此处先验分布$p(\overrightarrow{p})$就可以有很多种选择了，注意到
+$$p(\overrightarrow{n})=Mult(\overrightarrow{n}|\overrightarrow{p},N)$$
+实际上是在计算一个多项分布的概率，所以对先验分布的一个比较好的选择就是多项分布对应的共轭分布，即 Dirichlet 分布
+
+<div align=center>
+    <img src="zh-cn/img/lda/p37.png" /> 
+</div>
+
+此处，$\Delta(\overrightarrow{\alpha})$就是归一化因子$Dir(\overrightarrow{\alpha})$,即
+
+<div align=center>
+    <img src="zh-cn/img/lda/p38.png" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/lda/p39.png" /> 
+</div>
+
+回顾前一个小节介绍的 Drichlet 分布的一些知识，其中很重要的一点就是：
+
+**Dirichlet 先验 + 多项分布的数据 Rendered by QuickLaTeX.com 后验分布为 Dirichlet 分布**
+
+进一步，我们可以计算出文本语料的产生概率为：
+
+<div align=center>
+    <img src="zh-cn/img/lda/p40.png" /> 
+</div>
+
+
+#### 2.Topic Model 和 pLSA
+
+以上 Unigram Model 是一个很简单的模型，模型中的假设看起来过于简单，和人类写文章产生每一个词的过程差距比较大，有没有更好的模型呢？
+
+我们可以看看日常生活中人是如何构思文章的。如果我们要写一篇文章，往往是先确定要写哪几个主题。譬如构思一篇自然语言处理相关的文章，可能 40% 会谈论语言学、30% 谈论概率统计、20% 谈论计算机、还有10%谈论其它的主题：
+
++ 说到语言学，我们容易想到的词包括：语法、句子、乔姆斯基、句法分析、主语…；
++ 谈论概率统计，我们容易想到以下一些词: 概率、模型、均值、方差、证明、独立、马尔科夫链、…；
++ 谈论计算机，我们容易想到的词是： 内存、硬盘、编程、二进制、对象、算法、复杂度…；
+
+我们之所以能马上想到这些词，是因为这些词在对应的主题下出现的概率很高。我们可以很自然的看到，一篇文章通常是由多个主题构成的、而每一个主题大概可以用与该主题相关的频率最高的一些词来描述
+
+以上这种直观的想法由Hoffman 于 1999 年给出的pLSA(Probabilistic Latent Semantic Analysis) 模型中首先进行了明确的数学化。Hoffman 认为一篇文档(Document) 可以由多个主题(Topic) 混合而成， 而每个Topic 都是词汇上的概率分布，文章中的每个词都是由一个固定的 Topic 生成的。下图是英语中几个Topic 的例子。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p41.png" /> 
+</div>
+
+所有人类思考和写文章的行为都可以认为是上帝的行为，我们继续回到上帝的假设中，那么在 pLSA 模型中，Hoffman 认为上帝是按照如下的游戏规则来生成文本的。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p42.png" /> 
+</div>
+
+以上pLSA 模型的文档生成的过程可以图形化的表示为
+
+<div align=center>
+    <img src="zh-cn/img/lda/p43.png" /> 
+</div>
+
+我们可以发现在以上的游戏规则下，文档和文档之间是独立可交换的，同一个文档内的词也是独立可交换的，还是一个 bag-of-words 模型。游戏中的$K$个topic-word 骰子，我们可以记为 $\overrightarrow{\varphi_1},\overrightarrow{\varphi_2}...\overrightarrow{\varphi_K}$, 对于包含$M$篇文档的语料$C=(d_1,d_2,...,d_M)$中的每篇文档$d_m$，都会有一个特定的doc-topic骰子$\overrightarrow{\theta}_ m$，所有对应的骰子记为 $\overrightarrow{\theta}_ 1,\overrightarrow{\theta}_ 2,...,\overrightarrow{\theta}_ M$。为了方便，我们假设每个词$w$都是一个编号，对应到topic-word 骰子的面。于是在 pLSA 这个模型中，第$m$篇文档$d_m$中的每个词的生成概率为
+
+<div align=center>
+    <img src="zh-cn/img/lda/p44.png" /> 
+</div>
+
+所以整篇文档的生成概率为
+
+<div align=center>
+    <img src="zh-cn/img/lda/p45.png" /> 
+</div>
+
+由于文档之间相互独立，我们也容易写出整个语料的生成概率。关于pLSA的详细的算法可以参考上一章中对于LSA和pLSA的介绍。
+
 
 ### 5.LDA文本建模
 
 
+
+
+
 ### 6.Example
+
+```python
+'''
+整体过程就是：
+首先拿到文档集合，使用分词工具进行分词，得到词组序列；
+第二步为每个词语分配ID，既corpora.Dictionary；
+分配好ID后，整理出各个词语的词频，使用“词ID：词频”的形式形成稀疏向量，使用LDA模型进行训练
+'''
+
+from gensim import corpora, models
+import jieba.posseg as jp, jieba
+# 文本集
+texts = [
+    '美国教练坦言，没输给中国女排，是输给了郎平',
+    '美国无缘四强，听听主教练的评价',
+    '中国女排晋级世锦赛四强，全面解析主教练郎平的执教艺术',
+    '为什么越来越多的人买MPV，而放弃SUV？跑一趟长途就知道了',
+    '跑了长途才知道，SUV和轿车之间的差距',
+    '家用的轿车买什么好']
+jieba.add_word('四强', 9, 'n')
+flags = ('n', 'nr', 'ns', 'nt', 'eng', 'v', 'd')  # 词性
+stopwords = ('没', '就', '知道', '是', '才', '听听', '坦言', '全面', '越来越', '评价', '放弃', '人') 
+words_ls = []
+for text in texts:
+    words = [word.word for word in jp.cut(text) if word.flag in flags and word.word not in stopwords]
+    words_ls.append(words)
+
+# print(words_ls)
+# 这是分词过程，然后每句话/每段话构成一个单词的列表，结果如下所示：
+# [['美国', '输给', '中国女排', '输给', '郎平'],
+# ['美国', '无缘', '四强', '主教练'],...]
+
+
+#去重，存到字典
+dictionary = corpora.Dictionary(words_ls)
+# print(dictionary)
+# print(dictionary.token2id)
+# {'中国女排': 0, '美国': 1, '输给': 2, '郎平': 3, '主教练': 4, 
+# '四强': 5, '无缘': 6, '世锦赛': 7, '执教': 8, '晋级': 9,
+#  '艺术': 10, 'MPV': 11, 'SUV': 12, '买': 13, '跑': 14, '长途': 15, 
+#  '差距': 16, '轿车': 17, '家用': 18}
+
+
+corpus = [dictionary.doc2bow(words) for words in words_ls]
+# print(corpus)
+# 按照词ID：词频构成corpus：
+# [[(0, 1), (1, 1), (2, 2), (3, 1)],
+# [(1, 1), (4, 1), (5, 1), (6, 1)],...]
+
+
+lda = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=2)
+# print(lda)
+# LdaModel(num_terms=19, num_topics=2, decay=0.5, chunksize=2000)
+
+for topic in lda.print_topics(num_words=4):
+    print(topic)
+
+# 前面设置了num_topics = 2 所以这里有两个主题，很明显第一个是汽车相关topic，第二个是体育相关topic。
+# (0, '0.089"跑" + 0.088"SUV" + 0.088"长途" + 0.069"轿车"')
+# (1, '0.104"美国" + 0.102"输给" + 0.076"中国女排" + 0.072"郎平"')
+
+
+# 主题推断
+# print(lda.inference(corpus))
+# 上面语料属于哪个主题：
+# (array([[5.13748 , 0.86251986],
+# [0.6138436 , 4.386156 ],
+# [8.315966 , 0.68403417],
+# [5.387934 , 0.612066 ],
+# [5.3367395 , 0.6632605 ],
+# [0.59680593, 3.403194 ]], dtype=float32), None)
+
+
+for e, values in enumerate(lda.inference(corpus)[0]):
+    print(texts[e])
+    for ee, value in enumerate(values):
+        print('\t主题%d推断值%.2f' % (ee, value))
+# 美国教练坦言，没输给中国女排，是输给了郎平
+# 主题0推断值0.62
+# 主题1推断值5.38
+# 美国无缘四强，听听主教练的评价
+# 主题0推断值1.35
+# 主题1推断值3.65
+# 中国女排晋级世锦赛四强，全面解析主教练郎平的执教艺术
+# 主题0推断值0.82
+# 主题1推断值8.18
+# 为什么越来越多的人买MPV，而放弃SUV？跑一趟长途就知道了
+# 主题0推断值1.63
+# 主题1推断值4.37
+# 跑了长途才知道，SUV和轿车之间的差距
+# 主题0推断值0.65
+# 主题1推断值5.35
+# 家用的轿车买什么好
+# 主题0推断值3.38
+# 主题1推断值0.62
+
+
+text5 = '中国女排将在郎平的率领下向世界女排三大赛的三连冠发起冲击'
+bow = dictionary.doc2bow([word.word for word in jp.cut(text5) if word.flag in flags and word.word not in stopwords])
+ndarray = lda.inference([bow])[0]
+print(text5)
+for e, value in enumerate(ndarray[0]):
+    print('\t主题%d推断值%.2f' % (e, value))
+
+# 中国女排将在郎平的率领下向世界女排三大赛的三连冠发起冲击
+# 主题0推断值2.40
+# 主题1推断值0.60
+
+word_id = dictionary.doc2idx(['体育'])[0]
+for i in lda.get_term_topics(word_id):
+    print('【长途】与【主题%d】的关系值：%.2f%%' % (i[0], i[1]*100))
+
+# 【长途】与【主题0】的关系值：1.61%
+# 【长途】与【主题1】的关系值：7.41%
+
+````
+
+
+------
+
+
+
+## lda2vec
+
+Christopher Moody在2016年初提出的一种新的主题模型算法。
+
+<!-- https://redtongue.github.io/2018/08/27/lda2vev-Mixing-Dirichlet-Topic-Models-and-Word-Embeddings-to-Make-lda2vec/ -->
+
+<!--https://www.sohu.com/a/234584362_129720  -->
+<!-- https://github.com/cemoody/lda2vec -->
+<!-- https://blog.csdn.net/redtongue/article/details/87873773 -->
+
+<!-- https://blog.csdn.net/u010161379/article/details/51250109 -->

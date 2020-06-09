@@ -82,10 +82,10 @@ fastText模型的隐藏层计算方法:
 训练词向量的损失函数定义：
 
 <div align=center>
-    <img src="zh-cn/img/fasttext/p1.png" /> 
+    <img src="zh-cn/img/fastText/p1.png" /> 
 </div>
 <div align=center>
-    <img src="zh-cn/img/fasttext/p2.png" /> 
+    <img src="zh-cn/img/fastText/p2.png" /> 
 </div>
 
 
@@ -114,7 +114,7 @@ word2vec把语料库中的每个单词当成原子的，它会为每个单词生
 fastText模型架构和word2vec的CBOW模型架构非常相似。下面是fastText模型架构图:
 
 <div align=center>
-    <img src="zh-cn/img/fasttext/p3.png" /> 
+    <img src="zh-cn/img/fastText/p3.png" /> 
 </div>
 
 **注意**：此架构图没有展示词向量的训练过程。可以看到，和CBOW一样，fastText模型也只有三层：输入层、隐含层、输出层（Hierarchical Softmax），输入都是多个经向量表示的单词，输出都是一个特定的target，隐含层都是对多个词向量的叠加平均。
