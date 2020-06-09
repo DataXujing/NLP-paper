@@ -459,8 +459,183 @@ $$p(\overrightarrow{n})=Mult(\overrightarrow{n}|\overrightarrow{p},N)$$
 
 ### 5.LDA文本建模
 
+!> 一些符号的说明
+
++ $M$篇文档语料$C=(d_1,d_2,...,d_M)$
++ 每篇文档为$d_m$,都会有一个特定的doc-topic骰子$\overrightarrow{\theta_m}$,每个骰子有$K$个面(每个面代表一个topic)(给每篇文档选doc-topic骰子是一个多项分布)
++ 选出的doc-topic骰子$\overrightarrow{\theta_m}$对应$K$个topic,每个topic对应一个topic-word骰子$\overrightarrow{\varphi_k}$,$K$个topic对应$\overrightarrow{\varphi_1},\overrightarrow{\varphi_2},...,\overrightarrow{\varphi_K}$个骰子，每个topic-word $\overrightarrow{\varphi_k}$骰子的面表示的是word,因此，基于选出的topic去生成topic-word也是一个多项分布。
+
+#### 1 游戏规则
+
+对于上述的 pLSA 模型，贝叶斯学派显然是有意见的，doc-topic 骰子$\overrightarrow{\theta_m}$和 topic-word 骰子$\overrightarrow{\varphi_k}$都是模型中的参数，参数都是随机变量，怎么能没有先验分布呢？于是，类似于对 Unigram Model 的贝叶斯改造， 我们也可以如下在两个骰子参数前加上先验分布从而把 pLSA 对应的游戏过程改造为一个贝叶斯的游戏过程。由于$\overrightarrow{\theta_m}$和$\overrightarrow{\varphi_k}$都对应到多项分布，所以先验分布的一个好的选择就是Drichlet 分布，于是我们就得到了 LDA(Latent Dirichlet Allocation)模型。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p46.png" /> 
+</div>
+
+在 LDA 模型中, 上帝是按照如下的规则玩文档生成的游戏的
+
+<div align=center>
+    <img src="zh-cn/img/lda/p47.png" /> 
+</div>
+
+假设语料库中有$M$篇文档，所有的的word和对应的 topic 如下表示
+$$\overrightarrow{w}=(\overrightarrow{w_1},\overrightarrow{w_2},...,\overrightarrow{w_M})$$
+$$\overrightarrow{z}=(\overrightarrow{z_1},\overrightarrow{z_2},...,\overrightarrow{z_M})$$
+其中$\overrightarrow{w_m}$表示第$m$篇文档中的词，$\overrightarrow{z_m}$表示这些词对应的topic编号
+<div align=center>
+    <img src="zh-cn/img/lda/p48.png" /> 
+</div>
+
+#### 2 物理过程分解
+
+使用概率图模型表示， LDA 模型的游戏过程如图所示。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p49.png" /> 
+</div>
 
 
+这个概率图可以分解为两个主要的物理过程：
+
++ $\overrightarrow{\alpha}\to \overrightarrow{\theta_m}\to z_{m,n}$, 这个过程表示在生成第$m$篇文档的时候，先从第一个坛子中抽了一个doc-topic 骰子\overrightarrow{\theta_m}$, 然后投掷这个骰子生成了文档中第 $n$个词的topic编号z_{m,n}$；
++ $\overrightarrow{\beta}\to \overrightarrow{\varphi_k}\to w_{m,n}|k=z_{m,n}$, 这个过程表示用如下动作生成语料中第$m$篇文档的第$n$个词：在上帝手头的$K$个topic-word 骰子$\overrightarrow{\varphi_k}$中，挑选编号为$k=z_{m,n}$的那个骰子进行投掷，然后生成 word $w_{m,n}$；
+
+理解LDA最重要的就是理解这两个物理过程。 LDA 模型在基于$K$个 topic 生成语料中的$M$篇文档的过程中， 由于是 bag-of-words 模型，有一些物理过程是相互独立可交换的。由此， LDA 生成模型中， $M$篇文档会对应于$M$个独立的 Dirichlet-Multinomial 共轭结构； $K$个 topic 会对应于$K$个独立的 Dirichlet-Multinomial 共轭结构。所以理解 LDA 所需要的所有数学就是理解 Dirichlet-Multiomail 共轭，其它都就是理解物理过程。现在我们进入细节， 来看看 LDA 模型是如何被分解为 $M+K$个Dirichlet-Multinomial 共轭结构的。
+
+由第一个物理过程，我们知道$\overrightarrow{\alpha}\to \overrightarrow{\theta_m}\to z_{m}$表示生成第 $m$篇文档中的所有词对应的topics，显然 $\overrightarrow{\alpha}\to \overrightarrow{\theta_m}$对应于 Dirichlet 分布， $\overrightarrow{\theta_m}\to z_{m}$对应于 Multinomial 分布， 所以整体是一个 Dirichlet-Multinomial 共轭结构；
+
+<div align=center>
+    <img src="zh-cn/img/lda/p50.png" /> 
+</div>
+
+前文介绍 Bayesian Unigram Model 的小节中我们对 Dirichlet-Multinomial 共轭结构做了一些计算。借助于该小节中的结论，我们可以得到
+
+<div align=center>
+    <img src="zh-cn/img/lda/p51.png" /> 
+</div>
+
+其中$\overrightarrow{n_m}=(n^{(1)}_ m,...,n^{(K)}_ m)$,$n^{(k)}_ m$表示第$m$篇文档中第$k$个topic产生的词的个数。进一步，利用 Dirichlet-Multiomial 共轭结构，我们得到参数$\overrightarrow{\theta_m}$的后验分布恰好是
+$$Dir(\overrightarrow{\theta_m}|\overrightarrow{n_m}+\overrightarrow{\alpha})$$
+
+由于语料中 $M$篇文档的 topics 生成过程相互独立，所以我们得到 $M$个相互独立的 Dirichlet-Multinomial 共轭结构，从而我们可以得到整个语料中 topics 生成概率
+
+<div align=center>
+    <img src="zh-cn/img/lda/p52.png" /> 
+</div>
+
+目前为止，我们由$M$篇文档得到了$M$个 Dirichlet-Multinomial 共轭结构，还有额外$K$个 Dirichlet-Multinomial 共轭结构在哪儿呢？在上帝按照之前的规则玩 LDA 游戏的时候，上帝是先完全处理完成一篇文档，再处理下一篇文档。文档中每个词的生成都要抛两次骰子，第一次抛一个doc-topic骰子得到 topic, 第二次抛一个topic-word骰子得到 word，每次生成每篇文档中的一个词的时候这两次抛骰子的动作是紧邻轮换进行的。如果语料中一共有 $N$个词，则上帝一共要抛 $2N$次骰子，轮换的抛doc-topic骰子和 topic-word骰子。但实际上有一些抛骰子的顺序是可以交换的，我们可以等价的调整$2N$次抛骰子的次序：前$N$次只抛doc-topic骰子得到语料中所有词的 topics,然后基于得到的每个词的 topic 编号，后$N$次只抛topic-word骰子生成 $N$个word。于是上帝在玩 LDA 游戏的时候，可以等价的按照如下过程进行：
+
+<div align=center>
+    <img src="zh-cn/img/lda/p53.png" /> 
+</div>
+
+以上游戏是先生成了语料中所有词的 topic, 然后对每个词在给定 topic 的条件下生成 word。在语料中所有词的 topic 已经生成的条件下，任何两个 word 的生成动作都是可交换的。于是我们把语料中的词进行交换，把具有相同 topic 的词放在一起
+$$\overrightarrow{w^{'}}=(\overrightarrow{w_{(1)}},...,\overrightarrow{w_{(K)}})$$
+$$\overrightarrow{z^{'}}=(\overrightarrow{z_{(1)}},...,\overrightarrow{z_{(K)}})$$
+其中，$\overrightarrow{w_{(k)}}$表示这些词都是由第 $k$个 topic 生成的，$\overrightarrow{z_{(k)}}$对应于这些词的 topic 编号.
+
+对应于概率图中的第二个物理过程$\overrightarrow{\beta}\to \overrightarrow{\varphi_k}\to w_{m,n}|k=z_{m,n}$，在 $k=z_{m,n}$的限制下，语料中任何两个由 topic $k$生成的词都是可交换的，即便他们不再同一个文档中，所以我们此处不再考虑文档的概念，转而考虑由同一个 topic 生成的词。考虑如下过程 $\overrightarrow{\beta}\to \overrightarrow{\varphi_k}\to w_{(k)}$，容易看出， 此时$\overrightarrow{\beta}\to \overrightarrow{\varphi_k}$ 对应于 Dirichlet 分布， $\overrightarrow{\varphi_k}\to w_{(k)}对应于 Multinomial 分布， 所以整体也还是一个 Dirichlet-Multinomial 共轭结构；
+
+<div align=center>
+    <img src="zh-cn/img/lda/p54.png" /> 
+</div>
+
+同样的，我们可以得到
+
+<div align=center>
+    <img src="zh-cn/img/lda/p55.png" /> 
+</div>
+
+其中$\overrightarrow{n_k}=(n^{(1)}_ k,...,n^{(V)}_ k$,$n^{(t)}_ k$表示第$k$个topic产生的词中word $t$的个数,。进一步，利用 Dirichlet-Multiomial 共轭结构，我们得到参数 $\overrightarrow{\varphi_k}$的后验分布恰好是
+$$Dir(\overrightarrow{\varphi_k}|\overrightarrow{n_k}+\overrightarrow{\beta})$$
+
+而语料中 $K$个 topics 生成words 的过程相互独立，所以我们得到 $K$个相互独立的 Dirichlet-Multinomial 共轭结构，从而我们可以得到整个语料中词生成概率
+
+<div align=center>
+    <img src="zh-cn/img/lda/p56.png" /> 
+</div>
+
+从而
+
+<div align=center>
+    <img src="zh-cn/img/lda/p57.png" /> 
+</div>
+
+*式子-1：联合分布*
+
+此处的符号表示稍微不够严谨, 向量$\overrightarrow{n_k}, \overrightarrow{n_m}$, 都用$n$表示， 主要通过下标进行区分， $k$下标为 topic 编号, $m$下标为文档编号。
+
+#### 3 Gibbs Sampling
+
+有了联合分布$p(\overrightarrow{w},\overrightarrow{z})$, 万能的 MCMC 算法就可以发挥作用了！于是我们可以考虑使用 Gibbs Sampling 算法对这个分布进行采样。当然由于$\overrightarrow{w}$是观测到的已知数据，只有$\overrightarrow{z}$是隐含的变量，所以我们真正需要采样的是分布 $p(\overrightarrow{z}|\overrightarrow{w})$ 那篇很有名的LDA 模型科普文章 Parameter estimation for text analysis 中，是基于*式子-1：联合分布*式推导 Gibbs Sampling 公式的。此小节中我们使用不同的方式，主要是基于 Dirichlet-Multinomial 共轭来推导 Gibbs Sampling 公式，这样对于理解采样中的概率物理过程有帮助。
+
+语料库$\overrightarrow{z}$中的第$i$个词我们记为$i=(m,n)$,是一个二维下标，对应于第$m$篇文档的第$n$个词，我们用$-i$ 表示去除下标为$i$的词。那么按照 Gibbs Sampling 算法的要求，我们要求得任一个坐标轴$i$对应的条件分布$p(z_i=k|\overrightarrow{z_{-i}},\overrightarrow{w})$ 。假设已经观测到的词$w_i=t$, 则由贝叶斯法则，我们容易得到
+
+<div align=center>
+    <img src="zh-cn/img/lda/p58.png" /> 
+</div>
+
+由于$z_i=k,w_i=t$只涉及到第$m$篇文档和第i=$k$个 topic，所以上式的条件概率计算中, 实际上也只会涉及到如下两个Dirichlet-Multinomial 共轭结构
+
+1. $\overrightarrow{\alpha}\to \overrightarrow{\theta_m}\to z_{m}$
+2. $\overrightarrow{\beta}\to \overrightarrow{\varphi_k}\to w_{k}$
+
+其他$M+K-2$个Dirichlet-Multinomial共轭结构和$z_i=k,w_i=t$是独立的。
+
+由于在语料去掉第$i$个词对应的$(z_i,w_i)$，并不改变我们之前讨论的$M+K$个 Dirichlet-Multinomial 共轭结构，只是某些地方的计数会减少。所以$\overrightarrow{\theta_m},\overrightarrow{\varphi_k}$的后验分布都是 Dirichlet:
+
+<div align=center>
+    <img src="zh-cn/img/lda/p59.png" /> 
+</div>
+
+使用上面两个式子，把以上想法综合一下，我们就得到了如下的 Gibbs Sampling 公式的推导
+
+<div align=center>
+    <img src="zh-cn/img/lda/p60.png" /> 
+</div>
+
+以上推导估计是本节中最复杂的式子，表面上看上去复杂，但是推导过程中的概率物理意义是简单明了的：$z_i=k,w_i=t$的概率只和两个 Dirichlet-Multinomail 共轭结构关联。而最终得到的$\hat{\theta}_ {mk},\hat{\varphi}_ {kt}$ 就是对应的两个 Dirichlet 后验分布在贝叶斯框架下的参数估计。借助于前面介绍的Dirichlet 参数估计的公式 ，我们有
+
+<div align=center>
+    <img src="zh-cn/img/lda/p61.png" /> 
+</div>
+
+于是，我们最终得到了 LDA 模型的 Gibbs Sampling 公式
+
+<div align=center>
+    <img src="zh-cn/img/lda/p62.png" /> 
+</div>
+
+这个公式是很漂亮的， 右边其实就是 $p(topic|doc).p(word|topic)$，这个概率其实是 $doc\to topic\to word$ 的路径概率，由于topic 有$K$个，所以 Gibbs Sampling 公式的物理意义其实就是在这$K$条路径中进行采样。
+
+
+<div align=center>
+    <img src="zh-cn/img/lda/p63.png" /> 
+</div>
+
+#### 4 Training and Inference
+
+有了 LDA 模型，当然我们的目标有两个
+
++ 估计模型中的参数$\overrightarrow{\varphi_1},\overrightarrow{\varphi_2},...,\overrightarrow{\varphi_K}$和 $\overrightarrow{\theta_1},\overrightarrow{\theta_2},...,\overrightarrow{\theta_M}$；
++ 对于新来的一篇文档$doc_new$，我们能够计算这篇文档的 topic 分布$\overrightarrow{\theta_new}$。
+
+有了 Gibbs Sampling 公式， 我们就可以基于语料训练 LDA 模型，并应用训练得到的模型对新的文档进行 topic 语义分析。训练的过程就是获取语料中的$(z,w)$的样本，而模型中的所有的参数都可以基于最终采样得到的样本进行估计。训练的流程很简单:
+
+<div align=center>
+    <img src="zh-cn/img/lda/p64.png" /> 
+</div>
+
+对于 Gibbs Sampling 算法实现的细节，请参考 Gregor Heinrich 的 Parameter estimation for text analysis 中对算法的描述，以及LDA(http://code.google.com/p/plda) 的代码实现，此处不再赘述。
+
+由这个topic-word 频率矩阵我们可以计算每一个$p(word|topic)$概率，从而算出模型参数$\overrightarrow{\varphi_1},\overrightarrow{\varphi_2},...,\overrightarrow{\varphi_K}$, 这就是上帝用的$K$个 topic-word 骰子。当然，语料中的文档对应的骰子参数 $\overrightarrow{\theta_1},\overrightarrow{\theta_2},...,\overrightarrow{\theta_M}$ 在以上训练过程中也是可以计算出来的，只要在 Gibbs Sampling 收敛之后，统计每篇文档中的 topic 的频率分布，我们就可以计算每一个 $p(topic|doc)$概率，于是就可以计算出每一个$\overrightarrow{\theta_m}$。由于参数$\overrightarrow{\theta_m}$ 是和训练语料中的每篇文档相关的，对于我们理解新的文档并无用处，所以工程上最终存储 LDA 模型时候一般没有必要保留。通常，在LDA 模型训练的过程中，我们是取 Gibbs Sampling 收敛之后的 $n$个迭代的结果进行平均来做参数估计，这样模型质量更高。
+
+有了 LDA 的模型，对于新来的文档$doc_new$, 我们如何做该文档的 topic 语义分布的计算呢？基本上 inference 的过程和 training 的过程完全类似。对于新的文档， 我们只要认为 Gibbs Sampling 公式中的,$\hat{\varphi}_ {kt}$  部分是稳定不变的，是由训练语料得到的模型提供的，所以采样过程中我们只要估计该文档的 topic 分布$\overrightarrow{\theta_new}$就好了。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p65.png" /> 
+</div>
 
 
 ### 6.Example
@@ -597,3 +772,20 @@ Christopher Moody在2016年初提出的一种新的主题模型算法。
 <!-- https://blog.csdn.net/redtongue/article/details/87873773 -->
 
 <!-- https://blog.csdn.net/u010161379/article/details/51250109 -->
+
+!> 论文地址: <https://arxiv.org/abs/1605.02019>
+
+#### 0.ABSTRACT
+
+已经证明分布式密集词向量在捕捉语言中的标记级语义和句法规则方面是有效的，而主题模型可以在文档上形成可解释的表示。在这项工作中，我们描述了lda2vec，它是一个与Dirichlet分布的主题向量的潜在文档级别混合学习密集词向量的模型。与连续密集的文档表示形式相反，该表达式通过非负单纯形约束产生稀疏的，可解释的文档混合。我们的方法很容易整合到现有的自动分化框架中，并允许无监督的文档表示,适合科学家使用，同时学习单词向量及它们之间的线性关系。
+
+#### 1.Introduction
+
+主题模型因其能够将文档集合组织为一组较小的突出主题而受到欢迎。 与密集的分布式表示形式相反，这些文档和主题表示通常可以被人类理解接受，并且更容易被解释。 这种解释性提供了额外的选项来突出我们的文档系统中的模式和结构。 例如，使用潜在狄利克雷分配（LDA）主题模型可以揭示文档中的词汇集合（Blei et al。，2003），强调时间趋势（Charlin et al。，2015），并推断配套产品的网络（McAuley et al。 。，2015）。 见Blei等人。 （2010年），概述计算机视觉，遗传标记，调查数据和社交网络数据等领域的主题建模。
+
+<div align=center>
+    <img src="zh-cn/img/lda/p66.png" /> 
+</div>
+
+*图：lda2vec通过将word2vec的skip gram体系结构与Dirichlet优化的稀疏主题混合体相结合，在单词和文档上构建表示。 文中描述了图中出现的各种组件和转换。*
+
