@@ -1,92 +1,107 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>深度学习</title>
-  <link rel="shortcut icon" href="_media/favicon.ico" type="image/x-icon"/>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Description">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <!-- 主题 -->
-  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+    <meta charset="UTF-8">
+    <title>深度学习</title>
+    <link rel="shortcut icon" href="_media/favicon.ico" type="image/x-icon" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="Description">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <!-- 主题 -->
+    <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+    <!--<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/dark.css">-->
 
-<!--   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" > </script> -->
+    <meta name="google-site-verification" content="6t0LoIeFksrjF4c9sqUEsVXiQNxLp2hgoqo0KryT-sE" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="keywords" content="doc,docs,documentation,gitbook,creator,generator,github,jekyll,github-pages">
+    <meta name="description" content="A magical documentation generator.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/lib/themes/vue.css" title="vue">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/lib/themes/dark.css" title="dark" disabled>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/lib/themes/buble.css" title="buble" disabled>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/lib/themes/pure.css" title="pure" disabled>
 
-<!--   <script type="text/x-mathjax-config">
-    MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
-  </script>
- -->
-<!--   <script type="text/javascript" 
-    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
-  </script> -->
-  <!-- 放大图片 -->
-  <script src="//unpkg.com/docsify/lib/plugins/zoom-image.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-plugin-codefund/index.js"></script>
 
-  <!-- gittalk -->
-  <link rel="stylesheet" href="//unpkg.com/gitalk/dist/gitalk.css">
-  <!-- 代码高亮 -->
-  <script src="//unpkg.com/prismjs/components/prism-python.js"></script>
-  <!-- md5加密 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.11.0/js/md5.min.js"></script>
+    <!--   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" > </script> -->
+    <!--   <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+      </script>
+     -->
+    <!--   <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+      </script> -->
+    <!-- 放大图片 -->
+    <script src="//unpkg.com/docsify/lib/plugins/zoom-image.js"></script>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.js"></script>
-  <!-- <script src="//unpkg.com/docsify/lib/plugins/search.js"></script> -->
+    <!-- gittalk -->
+    <link rel="stylesheet" href="//unpkg.com/gitalk/dist/gitalk.css">
+    <!-- 代码高亮 -->
+    <script src="//unpkg.com/prismjs/components/prism-python.js"></script>
+    <!-- md5加密 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.11.0/js/md5.min.js"></script>
 
-  <script>
-    renderMathInElement(document.body,
-     {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.js"></script>
+    <!-- <script src="//unpkg.com/docsify/lib/plugins/search.js"></script> -->
+
+    <script>
+        renderMathInElement(document.body,
+            {
                 delimiters: [
-                    {left: "$$", right: "$$", display: true},
-                    {left: "$", right: "$", display: false}
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
                 ]
             }
-    );
-</script>
+        );
+    </script>
 
 
-  
-  <!-- <script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [['$','$'], ['\\(','\\)']],
-      processEscapes: true
-      },
-    displayAlign : "left",
-    TeX: {
-                equationNumbers: {
-                    autoNumber: "all",
-                    useLabelIds: true
-                }
-            },
-            "HTML-CSS": {
-                linebreaks: {
-                    automatic: true
-                },
-                scale: 100,
-                styles: {
-                  ".MathJax_Display": {
-                    "text-align": "left",
-                    "width" : "auto",
-                    "margin": "10px 0px 10px 0px !important",
-                    "background-color": "#f5f5f5 !important",
-                    "border-radius": "3px !important",
-                    border:  "1px solid #ccc !important",
-                    padding: "5px 5px 5px 5px !important"
-                  },
-                  ".MathJax": {
-                    "background-color": "#f5f5f5 !important",
-                    padding: "2px 2px 2px 2px !important"
+
+
+
+
+    <!-- <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        processEscapes: true
+        },
+      displayAlign : "left",
+      TeX: {
+                  equationNumbers: {
+                      autoNumber: "all",
+                      useLabelIds: true
                   }
-                }
-            },
-            SVG: {
-                linebreaks: {
-                    automatic: true
-                }
-            }
-    });
-  </script> -->
+              },
+              "HTML-CSS": {
+                  linebreaks: {
+                      automatic: true
+                  },
+                  scale: 100,
+                  styles: {
+                    ".MathJax_Display": {
+                      "text-align": "left",
+                      "width" : "auto",
+                      "margin": "10px 0px 10px 0px !important",
+                      "background-color": "#f5f5f5 !important",
+                      "border-radius": "3px !important",
+                      border:  "1px solid #ccc !important",
+                      padding: "5px 5px 5px 5px !important"
+                    },
+                    ".MathJax": {
+                      "background-color": "#f5f5f5 !important",
+                      padding: "2px 2px 2px 2px !important"
+                    }
+                  }
+              },
+              SVG: {
+                  linebreaks: {
+                      automatic: true
+                  }
+              }
+      });
+    </script> -->
 
 
 
@@ -95,9 +110,10 @@
   <div id="app">加载中...</div>
   <script>
     window.$docsify = {
-      search: 'auto', // 默认值
-      search:{
-         placeholder: '搜索...',
+      //search: 'auto', // 默认值
+        search: {
+            paths: 'auto',
+            placeholder: '搜索...',
       },
       loadSidebar: true,
       // el: '#main',
@@ -108,10 +124,11 @@
       '/.*/_sidebar.md': '/_sidebar.md'
       },
       subMaxLevel: 3,
-
+   
       loadNavbar: true,
 
       coverpage: true,
+      auto2top: true,//切换页面是否自动跳转到顶部
 
 
       // footer
@@ -181,6 +198,8 @@
   <script src="//unpkg.com/prismjs/components/prism-python.js"></script>
   <!-- <script src="//unpkg.com/docsify/lib/plugins/search.js"></script> -->
   <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 
   <!-- 代码高亮 -->
