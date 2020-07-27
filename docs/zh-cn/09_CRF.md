@@ -1,5 +1,10 @@
 ## CRF(条件随机场)
 
+
+<div align=center>
+    <img src="zh-cn/img/crf/p68.jpg" /> 
+</div>
+
 条件随机场（CRF）是给定一组输入随机变量条件下另一组随机变量的条件概率分布模型，其特点是假设输出随机变量构成马尔科夫随机场。条件随机场可以用于不同的预测问题，这里主要讲解线性链条件随机场，这时，问题变成了由输入序列对输出序列的判别模型，形式上为对数线性模型。线性链条件随机场应用于标注问题是由Lafferty等人于2001年提出的。
 
 ### 1.概率无向图模型（马尔可夫随机场）
@@ -35,7 +40,7 @@ $$P(Y_A,Y_B|Y_C)=P(Y_A|Y_C)P(Y_B|Y_C)$$
 
 **定义(概率无向图模型)**设在联合概率分布$P(Y)$,由无向图$G=(V,E)$表示，在图$G$中，结点表示随机变量，边表示随机变量之间的依赖关系。如果联合概率分布$P(Y)$满足成对，局部，或全局马尔可夫性，就称此联合概率分布为**概率无向图模型或马尔可夫随机场**。
 
-以上是概率无向图模型的定义，实际上，我们更关心的是如何求其联合概率分布。对给定的概率无向图模型，我们希望将整体的联合概率写成若干个子联合概率的乘积的形式，也就是将联合概率进行因子分解，这样便于模型的学习与计算。事实上，概率无向图模型的最大特点就是异于因子分解。
+以上是概率无向图模型的定义，实际上，我们更关心的是如何求其联合概率分布。对给定的概率无向图模型，我们希望将整体的联合概率写成若干个子联合概率的乘积的形式，也就是将联合概率进行因子分解，这样便于模型的学习与计算。事实上，概率无向图模型的最大特点就是易于因子分解。
 
 
 ### 2.条件随机场的定义和形式
@@ -62,7 +67,7 @@ $$P(Y)=\frac{1}{Z} \prod_C \psi_C(Y_C)$$
 其中，$Z$是规范化因子，如下：
 $$Z=\sum_Y\prod_C\Psi_C(Y_C)$$
 
-规范化因子保证$P(Y)$构成一个概率分布。函数$\Psi_C(Y_C)$成为势函数(potential function).这路要求势函数$\Psi_C(Y_C)$是严格正的，通常定义为指数函数
+规范化因子保证$P(Y)$构成一个概率分布。函数$\Psi_C(Y_C)$成为势函数(potential function).这要求势函数$\Psi_C(Y_C)$是严格正的，通常定义为指数函数
 $$\Psi_C(Y_C)=exp(-E(Y_C))$$
 
 概率无向图模型的因子分解由下述定理保证：
@@ -272,11 +277,249 @@ $Z_w(x)$为规范化因子，是$n+1$个矩阵的乘积的(start, stop)元素
 ### 4.条件随机场的学习算法
 
 
+**1.改进的迭代尺度法**
+
+已知训练数据集，可知经验分布：$\tilde{P}(x,y)$可通过极大化训练数据的对数似然函数来求模型参数：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p33.png" /> 
+</div>
+
+当$P$为条件随机场模型时:
 
 
+<div align=center>
+    <img src="zh-cn/img/crf/p34.png" /> 
+</div>
+
+改进的迭代尺度算法通过迭代的方法不断优化对数似然函数改变量的下界，达到极大化似然函数的目的。假设模型当前参数向量：$w=(w_1,w_2,...,w_K)^{T}$,向量的增量为$\delta=(\delta_1,delta_2,...,\delta_K)$，更新参数向量为$w+\delta$
+
+关于转移特征$t_k$的更新方程:
+
+<div align=center>
+    <img src="zh-cn/img/crf/p35.png" /> 
+</div>
+
+关于转移特征$s_l$的更新方程:
+
+<div align=center>
+    <img src="zh-cn/img/crf/p36.png" /> 
+</div>
 
 
+$T(x,y)$是在数据$(x,y)$中出现所有特征数的总和:
+
+<div align=center>
+    <img src="zh-cn/img/crf/p37.png" /> 
+</div>
+
+**(条件随机场模型学习的改进的迭代尺度法)**
+
+
+<div align=center>
+    <img src="zh-cn/img/crf/p38.png" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/crf/p39.png" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/crf/p40.png" /> 
+</div>
+
+
+$T(x,y)$表示数据$(x,y)$中的特征总数，对不同的数据$(x,y)$取值可能不同。为了处理这个问题，定义如下两种算法
+
+**算法S**
+
+定义松弛特征：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p41.png" /> 
+</div>
+
+$S$为大的常数，使得对训练数据集所有$(x,y)$
+
+$$s(x,y)>=0$$
+
+对于转移特征$t_k$,$\delta_k$的更新方程为：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p42.png" /> 
+</div>
+<div align=center>
+    <img src="zh-cn/img/crf/p43.png" /> 
+</div>
+
+其中：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p44.png" /> 
+</div>
+
+对于状态特征$s_l$,$\delta_k$的更新方程是：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p45.png" /> 
+</div>
+<div align=center>
+    <img src="zh-cn/img/crf/p46.png" /> 
+</div>
+<div align=center>
+    <img src="zh-cn/img/crf/p47.png" /> 
+</div>
+
+
+在算法S中需要常数S取的足够大，这样一来，每一步迭代的增量向量变大，算法收敛变慢，算法T试图解决这个问题
+
+
+**算法T**
+
+对每个观测序列$x$计算特征总数的最大值$T(x)$
+
+$$T(x)=\max_{y}T(x,y)$$
+利用前向-后向公式很容易计算$T(x)=t$,关于转移特征参数的更新方程可以写成：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p48.png" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/crf/p49.png" /> 
+</div>
+唯一的实根。
+
+同样的方式可以写出状态特征的参数更新方程
+
+<div align=center>
+    <img src="zh-cn/img/crf/p50.png" /> 
+</div>
+<div align=center>
+    <img src="zh-cn/img/crf/p51.png" /> 
+</div>
+
+**2.拟牛顿法**
+
+CRF的学习还可以使用牛顿法或拟牛顿法
+
+<div align=center>
+    <img src="zh-cn/img/crf/p52.png" /> 
+</div>
+
+学习的优化目标函数
+
+<div align=center>
+    <img src="zh-cn/img/crf/p53.png" /> 
+</div>
+
+梯度函数
+
+<div align=center>
+    <img src="zh-cn/img/crf/p54.png" /> 
+</div>
+
+**(条件随机场模型学习的BFGS算法)**
+
+<div align=center>
+    <img src="zh-cn/img/crf/p55.png" /> 
+</div>
+<div align=center>
+    <img src="zh-cn/img/crf/p56.png" /> 
+</div>
 
 
 
 ### 5.条件随机场的预测算法
+
+条件随机场的预测问题是给定条件随机场$P(Y|X)$和输入的观测序列$x$,求条件概率最大的观测序列（标记序列）$y^{* }$,即观测序列进行标注，条件随机场的预测算法是著名的**维特比算法**
+
+由CRF的定义：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p52.png" /> 
+</div>
+
+可得：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p57.png" /> 
+</div>
+
+于是CRF的预测问题成为求非规范化概率最大的最优路径问题
+
+$$\max_y(w.F(y,x))$$
+
+这里路径表示标记序列。其中：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p58.png" /> 
+</div>
+
+注意，这里只需计算非规范化的概率，而不必计算概率，可以大大提高效率，为了求解最优路径，写成如下形式
+
+$$\max_y\sum_{i=1}^{n}w.F_i(y_{i-1},y_i,x)$$
+
+其中
+
+<div align=center>
+    <img src="zh-cn/img/crf/p59.png" /> 
+</div>
+
+是局部特征向量。
+
+
+下面叙述维特比算法：
+
+首先求出位置1的各个标记$j=1,2,...,m$的非规范化概率
+
+<div align=center>
+    <img src="zh-cn/img/crf/p60.png" /> 
+</div>
+
+一般的，由递推公式，求出到位置$i$的各个标记$l=1,2,...,m$的非规范化概率的最大值，同时记录最大值路径：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p61.png" /> 
+</div>
+
+直到$i=n$时终止，这时求得非规范化概率的最大值为
+
+
+<div align=center>
+    <img src="zh-cn/img/crf/p62.png" /> 
+</div>
+
+及最优路径的终点
+
+
+<div align=center>
+    <img src="zh-cn/img/crf/p63.png" /> 
+</div>
+
+
+由此最优路径的终点返回：
+
+
+<div align=center>
+    <img src="zh-cn/img/crf/p64.png" /> 
+</div>
+
+求得最优的路径：
+
+<div align=center>
+    <img src="zh-cn/img/crf/p65.png" /> 
+</div>
+
+**(条件随机场预测的维特比算法)**
+
+<div align=center>
+    <img src="zh-cn/img/crf/p66.png" /> 
+</div>
+
+
+最后通过一个例题说明维特比算法
+
+<div align=center>
+    <img src="zh-cn/img/crf/p67.png" /> 
+</div>
