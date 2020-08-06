@@ -29,7 +29,7 @@ HomePage: [https://dataxujing.github.io/](https://dataxujing.github.io/)
 * [x] [10.LSA(LSI),pLSA(pLSI)](zh-cn/10_LSA.md)
 * [x] [11.LDA,lda2vec](zh-cn/11_LDA.md)
 * [x] [12.TextRank,PageRank](zh-cn/12_pangerank.md)
-* [ ] [13.Attention机制](zh-cn/13_Attention.md)
+* [x] [13.Attention机制](zh-cn/13_Attention.md)
 * [ ] [14.Transformer](zh-cn/14_Transformer.md)
 * [x] [15.seq2seq](zh-cn/15_seq2seq.md)
 
