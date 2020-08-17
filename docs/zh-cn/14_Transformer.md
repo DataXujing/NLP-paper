@@ -437,6 +437,200 @@ Decoder block 第二个 Multi-Head Attention 变化不大， 主要的区别在�
     <img src="zh-cn/img/transformer/p45.png" /> 
 </div>
 
----
+------
 
-## 2.Transformer-XL
+## 2.Vanilla Transformer: Character-Level Language Modeling with Deeper Self-Attention
+
+<!-- https://blog.csdn.net/pingpingsunny/article/details/105056297 -->
+<!-- https://zhuanlan.zhihu.com/p/84159401 -->
+<!-- https://www.cnblogs.com/huangyc/p/11445150.html -->
+
+<!-- Universal Transformer 重新将recurrence引入transformer，并加入自适应的思想，使得transformer图灵完备，并有着更好的泛化性和计算效率 -->
+
+Transformer-XL主要对比的对象即为Vanilla Transformer,这篇Paper的标题为Character-Level Language Modeling with Deeper Self-Attention，按照Transformer-XL对该Paper的称呼，习惯成本节要解读的模型结构为Vanilla Transformer。
+
+语言模型有word-level（词级）和character-level（字符级）等，word-level语言模型通常在词序列的基础上建模，而character-level语言模型通常是在字符序列的基础上建模。Word-level语言模型会遇到OOV（out of vocabulary）问题，即词不在词表中的情况，而character-level语言模型则不会出现此问题
+
+语言模型一般较多使用RNN网络来建模，而character序列比Word序列更长，因此，模型的优化更难。针对此问题，有文献提出将字符序列分割成多段来处理，相邻段之间有信息的前向传递来学习更长期的依赖，但是梯度的反向传播被截断。而Vanilla Transformer也将序列分成多段，不同的是Vanilla Transformer使用Transformer来对字符序列建模，取得了SOTA的成果。
+
+Vanilla Transformer在使用Transformer对字符序列建模，相邻的每段之间没有前向和后向的信息交互，同时增加了辅助损失函数来加速模型的训练。增加的辅助损失函数有3个，一是预测序列中的每个字符，二是在中间层也预测每个字符，三是每次预测多个字符。
+
+先前的语言模型一般是通过一个完整的序列预测最后一个词或字符，而此文则预测每个字符，也可以说是一种seq-to-seq模型，只是没有将整个序列先编码成一个向量再解码成字符，而是将encoder和decoder合二为一，直接预测。
+
+
+### 1.Vanilla Transformer的结构
+
+首先，作者要解决的问题是字级别的语言模型，相比词级别的语言模型，字符级别语言模型明显需要依赖的距离特别长，比如说一句话某个位置是应该使用she还是he，是依赖于前面的主语情况，这个主语可能距离此单词位置的有十几个单词，每个单词7-8字母长度，那么这就将近100+个字符长度了，作者使用Transformer的结构主要原因是他认为该结构很容易做到在任意距离上的信息传递，而相对RNN（LSTM）这种结构，就需要按照时间一步一步的传递信息，不能做到跨越距离。
+
+这篇文章虽然用到了Transformer结构，但与Attention is all you need(Transformer上一节）是有差异的。原Transformer整体是一个seq2seq结构。而Vanilla Transformer只利用了原Transformer的decode的部分结构，也就是一个带有mask的attention层+一个ff层。
+
+如果将 `"一个带有mask的attention层+一个ff层"` 称为一个layer，那么Vanilla Transformer一共有64个这样的layer，每一个layer有2个head，`model_dim=512`，ff层的`hidden_units=2048`，sequence的长度为`512`。对于训练语言模型来说，这已经是一个很深的网络了，要知道对于大名鼎鼎的BerT网络的层数也就12层（base）和24层（large）了。
+
+另外，之所以使用mask结构是因为语言模型的定义是$p(x_i|x_0,x_1,...,x_{i-1})$，也就是根据前`i`个字符预测第`i+1`个字符，如果你已经提前看到了答案（也就是第`i+1`个字符甚至更后面的字符内容），那就没有预测的意义了，这里加mask与原Transformer的decode部分的带有mask的self-attention道理都是一样的。
+
+Positional Embeddings：RNN结构的网络对于类似于语言模型这种序列性的数据编码带有天然的优势，但缺点就是不能并行，必须要step by step。而attention结构最大的优点就是可以实现并行，但它不能表达序列性，所以为了给网络加入识别序列性就要引入 位置编码 Positional Embeddings。在原Transformer中，位置编码的编码信息是固定的，不需要学习，具体编码方式如下，输出为pos embedding。将`word embedding + pos embedding`整体作为网络的输入，并且仅在第一层加入了位置编码，之后的每层都不会再次加入。而对于Vanilla Transformer，作者认为它的网络深度太深了，如果只在第一层加入pos embedding，那么经过多层传递，这个信息很容易丢失，所以它是每层都会将上一层的输出与pos embedding加在一起作为下一层的输入，而且，pos embedding是可学习的。所以，仅pos embedding模型就要学习 `N\times L\times dim` 个参数，其中`N`是网络的层数（本文`64`层），`L`是上下文的长度(本文`512`)，dim是embedding的维度（`本文=512`）。
+
+```python
+# 这个是Transformer的Postion encoding
+def positional_encoding(dim, seq_length, dtype=tf.float32):
+    """
+    :param dim: 编码后的维度
+    :param seq_length: 序列的最大长度
+    :param dtype:
+    :return:
+    """
+    pos_encode = np.array([pos/np.power(10000, 2*i/dim) for pos in range(seq_length) for i in range(dim)])
+    pos_encode[0::2] = np.sin(pos_encode[0::2])
+    pos_encode[1::2] = np.cos(pos_encode[1::2])
+    return tf.convert_to_tensor(pos_encode.reshape([seq_length, dim]), dtype=dtype, name='positional_encoding')
+```
+
+总之，从结构上来说，Vanilla Transformer没有什么太特别的地方，用的组件都是原Transformer这篇论文中用到的，甚至还精简了一些，无非就是Vanilla Transformer的网络深度非常深。这个深度导致在训练的时候很难收敛，个人认为这篇论文中值得学习的就是为了达到收敛目的，作者使用的一些小Trick，这些小Trick对于我们以后解决类似的问题是很有帮助的。
+
+
+### 2.Vanilla Transformer训练时作者的一些Trick
+
+作者在论文中说当网络的深度超过10的时候，就很难让模型收敛，准确率也很低，所以如果大家训练的网络深度超过10的时候就可以部分借鉴这篇论文中的训练方法：引入辅助的loss。 如下图所示，这个辅助的loss分为3类：Multiple Positions； Intermediate Layer Losses； Multiple Targets
+
+为了方便，我们只以2层来展示，且每一个segment的length=4，原本我们是根据`t0~t3`的输入，在`H`节点这个位置预测`t4`的结果，loss就是`H`节点的输入计算一个交叉熵。现在辅助loss的第一类loss就是：对于最后一层所有的节点都计算下一步应该预测的字符，即在节点`E`处根据输入`t0`，预测输出为`t1`，在节点F处根据输入为`t0`和`t1`，输出是`t2`，以此类推。然后将每一个Positions处的loss加起来。第一类loss贯穿整个train的全部阶段，不发生衰减。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/vanilla/p1.png" /> 
+</div>
+
+辅助loss的第二类是除了在最后一层计算交叉熵loss之外，在中间层也要计算，即在节点`A`处根据输入`t0`，预测输出为`t1`，以此类推，但中间层的loss并不贯穿整个train始终，而是随着训练进行，逐渐衰减，衰减的方式是，一共有`n`层网络，当训练进行到 `(k/(2*n))`时停止计算第`k`层loss。也就是说当训练进行到一半的时候，所有的 中间层 都不再贡献loss。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/vanilla/p2.png" /> 
+</div>
+
+
+辅助loss的第三类是每次预测时所预测几个字符，在本论文中，每次预测下一步和下下步的字符结果，具体的看下面的图即可，非常清楚。但对于下下步的预测结果产生的loss是要发生衰减的，论文中该loss乘以`0.5`后再加入到整体的loss中。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/vanilla/p3.png" /> 
+</div>
+
+
+### 3.Vanilla Transformer的相关测试结果
+
+
+作者使用的数据集有`enwik8`，`lm1b`，`text8`这3个，列举了`64`层的transformer模型与`12`层的transformer模型（目的是比较一下是否深度增加效果更好）还有一些RNN结构的模型进行了比较，实践证明该方法是比较好的，具体数据见论文，此处不列出。
+
+但是作者的消融实验的比较结果我认为是很有意义的，这个对于我们以后设计模型有参考性，就是作者这篇论文里提到了加了3种辅助loss帮助训练，还有就是作者使用了momentum优化器训练，使用的pos embedding也是跟之前不同的。那么这些因素到底有没有用，如果有用，哪个用处大，有多大？针对这个问题作者进行了一个比较，比较的基线是上面讲的`64`层模型。
+
+可以看出，辅助loss中的Multiple Positions和Intermediate Layer Losses效果是最明显的，至于使用了需要学习的pos embedding并没有太大的作用，优化器和Multiple Targets的辅助loss感觉效果都不大。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/vanilla/p4.png" /> 
+</div>
+
+
+
+### 4.其他
+
+Vanilla Transformer是Transformer和Transformer-XL中间过度的一个算法,其结构图如下：
+
+<div align=center>
+    <img src="zh-cn/img/transformer/vanilla/p5.png" /> 
+</div>
+
+它使用$x_1,x_2,...,x_{n−1}$ 预测字符$x_n$，而$x_n$之后的序列都被mask掉。论文中使用`64`层模型，并仅限于处理 `512`个字符这种相对较短的输入，因此它将输入分成段，并分别从每个段（segment）中进行学习，如上图所示。 在测试阶段如需处理较长的输入，该模型会在每一步中将输入向右移动一个字符，以此实现对单个字符的预测。
+
+简单说：
++ 训练阶段，预测下一个字符的时候，并不是用所有上下文，只是用一个段（segment）的上下文预测。以此训练整个网络。
++ 测试阶段，也是用一个段（segment）大小的context预测下一个字符。在预测的时候，会对固定长度的segment做计算，一般取最后一个位置的隐向量作为输出。为了充分利用上下文关系，在每做完一次预测之后，就对整个序列向右移动一个位置，再做一次计算，如上图所示，这导致计算效率非常低。
+
+Vanilla Transformer的三个缺点：
++ 上下文长度受限：字符之间的最大依赖距离受输入长度的限制，模型看不到出现在几个句子之前的单词。
++ 上下文碎片：对于长度超过512个字符的文本，都是从头开始单独训练的。段与段之间没有上下文依赖性，会让训练效率低下，也会影响模型的性能。
++ 推理速度慢：在测试阶段，每次预测下一个单词，都需要重新构建一遍上下文，并从头开始计算，这样的计算速度非常慢。
+
+下一节，我们将看到Transformer-XL是如何解决这些问题的！
+
+------
+
+## 3.Transformer-XL: Attentive Language Models Beyond a Fixed-Length Context
+
+<!-- https://www.cnblogs.com/huangyc/p/11445150.html -->
+<!-- https://zhuanlan.zhihu.com/p/84159401 -->
+
+Transformer-XL架构在vanilla Transformer的基础上引入了两点创新：
+
++ 循环机制（Recurrence Mechanism）
++ 相对位置编码（Relative Positional Encoding）。
+
+以克服Vanilla Transformer的缺点。与Vanilla Transformer相比，Transformer-XL的另一个优势是它可以被用于单词级和字符级的语言建模。
+
+### 1.Segment-Level Recurrence
+
+<div align=center>
+    <img src="zh-cn/img/transformer/xl/p1.png" /> 
+</div>
+
+为了解决Vanilla Transformer提到的问题，在Transformer的基础上，Transformer-XL提出了一个改进，在对当前Segment进行处理的时候，缓存并利用上一个Segment中所有layer的隐向量序列，而且上一个Segment的所有隐向量序列只参与前向计算，不再进行反向传播，这就是所谓的segment-level Recurrence。
+
+我们详细看一下如何操作。Transformer本身是可以设置multi-heads，但是在后文中为了简化描述采用单个head。将两个连续的segments表示为
+$$s_\tau=[x_{\tau,1},x_{\tau,2},...,x_{\tau,L}]$$
+$$s_{\tau+1}=[x_{\tau+1,1},x_{\tau+1,2},...,x_{\tau+1,L}]$$
+
+`L`是序列长度。假设整个模型中，包含`N`层Transformer，那么每个Segment中就有`N`组长度为`L`的隐向量序列, 将第$\tau$个Segment的第`n`层隐向量序列表示为$h^{n}_ {\tau}\in R^{L\times d}$，`d`是隐向量的维度。那么第$\tau+1$个segment的第`n`层隐向量序列，可以由下面的一组公式计算得出。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/xl/p2.png" /> 
+</div>
+
+这里$SG(.)$是stop-gradinet,不再对$s_\tau$的隐含向量做反向传播。$\tilde{h}^{n-1}_ {\tau+1}$是对两个银行向量序列眼长度方向的拼接，$[ ]$内两个隐含向量的维度都是$L \times d$，拼接之后的向量维度是$2L\times d$。3个$W$分别对应`query`，`key`和`value`的转化矩阵。注意`q`的计算方式不变，只使用当前segment中的隐向量，计算得到的`q`序列长度仍然是`L`。 `k`和`v`采用拼接之后的$\tilde{h}$来计算，计算出来的序列长度是`2L`。 之后的计算就是标准的Transformer计算。计算出来的第`n`层隐向量序列长度仍然是`L`，而不是`2L`。Transformer的输出隐向量序列长度取决于`query`的序列长度，而不是`key`和`value`。
+
+训练和预测过程如上图所示。这张图上有一个点需要注意，在当前segment中，第`n`层的每个隐向量的计算，都是利用下一层中包括当前位置在内的，连续前`L`个长度的隐向量，这是在上面的公式组中没有体现出来的，也是文中没有明说的。 每一个位置的隐向量，除了自己的位置，都跟下一层中前`(L-1)`个位置的`token`存在依赖关系，而且每往下走一层，依赖关系长度会增加`(L-1)`，如上图中Evaluation phase所示，所以最长的依赖关系长度是`N(L-1)`，`N`是模型中layer的数量。 `N`通常要比`L`小很多，比如在BERT中，`N=12`或者`24`，`L=512`，依赖关系长度可以近似为$O(N\times L)$。
+在对长文本进行计算的时候，可以缓存上一个segment的隐向量的结果，不必重复计算，大幅提高计算效率。
+
+上文中，我们只保存了上一个segment，实际操作的时候，可以保存尽可能多的segments，只要内存或者显存放得下。论文中的试验在训练的时候，只缓存一个segment，在预测的时候，会缓存多个segments。
+
+### 2.Relative Position Encodings
+
+在Vanilla Transformer中，为了表示序列中`token`的顺序关系，在模型的输入端，对每个`token`的输入embedding，加一个位置embedding。位置编码embedding或者采用正弦\余弦函数来生成，或者通过学习得到。在Transformer-XL中，这种方法行不通，每个segment都添加相同的位置编码，多个segments之间无法区分位置关系。Transformer-XL放弃使用绝对位置编码，而是采用相对位置编码，在计算当前位置隐向量的时候，考虑与之依赖`token`的相对位置关系。具体操作是，在算attention score的时候，只考虑`query`向量与`key`向量的相对位置关系，并且将这种相对位置关系，加入到每一层Transformer的attention的计算中。
+
+我们对两种方法做个对比。下面一组公式是Vanilla Transformer计算attention的方式，$E_x$表示`token`的输入embedding，$U$是绝对位置编码embedding，两个$W$分别是`query`矩阵和`key`矩阵。下面的公式是对$(E_{x_i}+U_i)W_qW_k(E_{x_j}+U_j)$作了分解
+
+<div align=center>
+    <img src="zh-cn/img/transformer/xl/p3.png" /> 
+</div>
+
+
+下面一组公式，是Transformer-XL计算attention的方式。首先，将绝对位置编码$U$，替换成了相对位置编$R_{i-j}$。 插一句，因为$i$只利用之前的序列，所以$i-j>=0$。其次,对于所依赖的`key`向量序列，query向量$U_iW_q$都是固定的,因此将上面公式组(c)中的$U_iW_q$替换为$u\in R^d$,将上面中的(d)中的$U_iW_q$替换为$v\in R^d$, $u$和$v$都通过学习得到。最后我们再将$W_k$矩阵再细分成两组矩阵$W_{k,E}$和$W_{k,R}$，分别生成基于内容的`key`向量和基于位置的`key`向量。可以仔细思考一下每一项中的依赖关系。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/xl/p4.png" /> 
+</div>
+
+
+相对位置关系用一个位置编码矩阵$R\in R^{L_{max} \times d}$来表示，第$i$行表示相对位置间隔为$i$的位置向量。论文中强调$R$采用正弦函数生成，而不是通过学习得到的，好处是预测时，可以使用比训练距离更长的位置向量。
+
+最后来看一下Transformer-XL的完整计算公式，如下所示，只有前3行与Vanilla Transformer不同，后3行是一样的。第3行公式中，计算`A`的时候直接采用`query`向量，而不再使用$E_xW_q$表示。 最后需要注意的是，每一层在计算attention的时候，都要包含相对位置编码。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/xl/p5.png" /> 
+</div>
+
+
+### 3.其他
+
+**优点** 
+
+1. 在几种不同的数据集（大/小，字符级别/单词级别等）均实现了SOTA的语言建模结果。
+2. 结合了深度学习的两个重要概念——循环机制和注意力机制，允许模型学习长期依赖性，且可能可以扩展到需要该能力的其他深度学习领域，例如音频分析（如每秒16k样本的语音数据）等。
+3. 在inference阶段非常快，比之前最先进的利用Transformer模型进行语言建模的方法快300～1800倍。
+
+**不足**
+
+1. 尚未在具体的NLP任务如情感分析、QA等上应用。
+没有给出与其他的基于Transformer的模型，如BERT等，对比有何优势。
+2. 训练模型需要用到大量的TPU资源。
+
+
+------
+
+最后我们详细介绍Transformer在目标检测(计算机视觉领域)的应用。
+
+## 4.Detr: End-to-End Object Detection with Transformers

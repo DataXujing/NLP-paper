@@ -32,6 +32,8 @@
 |2020-08-5             |  seq2seq                 |
 |2020-08-6             |  attention机制            |
 |2020-08-12            |  Transformer             |
+|2020-08-17            |  Vanilla Transformer     |
+
 
 
 
