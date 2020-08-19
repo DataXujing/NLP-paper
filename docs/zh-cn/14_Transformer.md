@@ -633,4 +633,358 @@ $$s_{\tau+1}=[x_{\tau+1,1},x_{\tau+1,2},...,x_{\tau+1,L}]$$
 
 最后我们详细介绍Transformer在目标检测(计算机视觉领域)的应用。
 
-## 4.Detr: End-to-End Object Detection with Transformers
+## Detr: End-to-End Object Detection with Transformers
+
+<!-- https://blog.csdn.net/Skies_/article/details/106639940 -->
+<!-- http://www.91cang.com/2020/06/06/DETR%E8%AE%BA%E6%96%87%E8%A7%A3%E6%9E%90/ -->
+
+<!-- 二分图匹配 -->
+<!-- https://www.cnblogs.com/tsunderehome/p/7503161.html -->
+<!-- https://blog.csdn.net/young__fan/article/details/90719285 -->
+<!-- https://blog.csdn.net/qq_41730082/article/details/81162561 -->
+
+<!-- https://blog.csdn.net/dark_scope/article/details/8880547 -->
+
+<!-- detr -->
+<!-- https://arxiv.org/pdf/2005.12872v3.pdf -->
+<!-- https://github.com/facebookresearch/detr -->
+<!-- https://www.youtube.com/watch?v=T35ba_VXkMY (强烈推荐) -->
+<!-- https://blog.csdn.net/sixdaycoder/article/details/47720471?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-4.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-4.nonecase -->
+
+
+### 0.Abstract
+
+Detr提供了一个新的目标检测的方法，将目标检测看做一个集合(set)的预测问题。过程中没有NMS,anchor等的人工设定的超参数问题。Detr(DEtection TRansformer),是一个基于集合的(set-based)全局损失(global loss)，通过二分匹配(bipartite matching)和transformer的encoder-decoder的结构。提供给定的一组待学习的目标查询(query),Detr能够并行找到这些目标之间的关系及在全局图像上的上下文信息，并输出最终的预测结果。Detr训练推断都比较简单，不涉及其他额外的库，其运行的精度和速度对标Faster R-CNN， 稍作修改可以使用在全景分割（panoptic segmentation）的场景，Facebook AI开源了该算法：<https://github.com/facebookresearch/detr> 
+
+论文贡献：
++ 提出将TransformerTransformer引用于目标检测的方法，并且得到了预期的结果，相当于为以后的目标检测提供一种新的方法论；
++ 论文使用的模型结构非常简洁，不添加任何额外的TricksTricks就能获得与FasterFaster-RCNNRCNN相当的结果；
++ 主要为我们提供了一种思路，提出一种将深度学习两大领域（NLPNLP和CVCV）进行结合的有效方法。
+
+### 1.Introduction
+
+目标检测的目的是**为图像中每个感兴趣目标预测一组边界框及相应类别**。然后，当前大多目标检测方法通过回归和分类获得最终的检测结果。但作者指出，模型性能会严重受到后处理的影响。比如在处理近似重叠的目标时，先验框的设置并不能同时满足二者的检测需求。论文提出的方法简化了目标检测流程，该方法已经在诸如机器翻译和语义识别上大获成功。前人也有将其运用于目标检测中，但都是通过添加大量的先验知识或并没有取得如期的结果。
+
+DETR将检测视为**集合预测**问题，简化了目标检测的整体流程。它主要采用了Transformer的编解码结构，它在序列预测任务上大获成功。Transformer中的自注意力机制显示地界定了序列中元素间的相互作用，因此可以用于约束集合的预测结果。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p1.png" /> 
+</div>
+
+如上图是DETR的检测流程，它一次性预测多个目标，并通过损失函数唯一地匹配预测结果和标注信息。DETR不需要添加其他的特殊层，整个结构仅由Transformer和ResNet组成。同时，在最后的二分匹配过程我们可以看到，产生的预测结果中不包含感兴趣目标类别时，它与空匹配。
+
+与其他的集合预测问题相比，DETR的一大优势是将解码器同二分匹配损失函数结合，从而可以并行处理。该损失函数将预测结果唯一地与标注信息匹配，因而可以实现并行预测。
+
+DETR在COCO数据集上验证了其成功性，并与同期的Faster R-CNN相对比，获得了更佳的结果。但同时，尽管DETR在大目标或中等目标上的检测结果较好，**它对小目标的检测不具有鲁棒性**。作者提出的相关解决办法是在DETR中引入FPN以提升小目标的检测结果。
+
+### 2.Related Work
+
+#### 2.1 Set Prediction
+
+在深度学习中，没有特定的结构用于直接集合预测。最典型的集合预测任务当属多标签分类问题，但这类方法不可以直接迁移到目标检测中（目标检测中还需要对目标进行定位）。这类任务中首要问题是重复检测，当前目标检测方法使用的是非极大值抑制。但集合预测不需要后处理，它通过全局推理来预测元素之间的关系。同时，可以使用全连接网络预测固定大小的集合，但同时会带来庞大的计算量。一种可能的解决办法是使用**自递归序列模型(auto-regressive sequence models)**，如循环神经网络。在这种情况下，损失函数应该对预测目标保持不变，一种解决办法是使用**匈牙利算法**设计损失函数来唯一匹配预测结果和标注信息。与以往方法不同的是，论文没有采用自回归模型，而是使用了带并行编码器的Transformer模型。
+
+#### 2.2 Transformers and Parallel Decoding
+
+下图展示了Transformer的结构，注意力机制可以聚合输入信息。Transformer引入自注意力机制，类似于非局部神经网络，它扫描序列中的每个元素并通过序列的整体信息来更新元素。基于注意力机制的模型的一大优势是可以进行全局推理且不会占据较大内存。Transformer模型在文本翻译、语音识别等领域已大获成功。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p3.png" /> 
+</div>
+
+同早期的序列模型一样，Transformer首先使用自回归模型逐个生成元素。但由于推理成本的限制，以并行的方式产生序列没能得到发展。作者提出的思路是将Transformer同并行解码结合，在计算成本和集合预测所需的全局推理之间进行适当的权衡。
+
+#### 2.3 Object Detection
+
+相关工作部分主要介绍了前人基于集合预测的目标检测方法，前文已经提到，大多数工作都要大量的人为的先验信息，这在一定程度上限制了网络的学习能力。
+
+### 3.The DETR Model
+
+DETR的两个关键是：利用损失函数完成预测内容和标注信息的唯一匹配以及预测一组目标及其之间的关系。如下图：
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p2.png" /> 
+</div>
+
+#### 3.1 Object Detection Set Prediction Loss
+
+首先，DETR产生一组固定的$N$个预测结果($N$远大于图像中的目标数)。接下来的关键是如何设计损失函数使得预测的结果同标注信息信息匹配。论文中的做法是:令$y$表示标注信息，$\hat{y}={\hat{y}_ i}^n_{i=1}$表示预测结果。我们将标注信息的集合填充为同预测信息一样大($N>y$,相当于将表示标注信息的结合的类别填充为空，坐标填充为随机量)。然后，为了找到这两个集合内元素的一一对应，定义如下：
+$$\hat{\sigma}=\arg\min_{\sigma \in N}\sum^{N}_ {i}L_{match}(y_i,\hat{y}_ {\sigma(i)})$$
+对于第$i$个标注信息$y_i=(c_i,b_i)$，$c_i$表示类别(可能为空)，$b_i$是表示边界框的四维向量(中心点坐标和宽高,归一化后的)。对于预测信息，$c_i=\hat{p}_ {\sigma(i)}(c_i)$, $b_i=\hat{b}_ {\sigma(i)}$, 则$L_{match}$的定义如下：
+$$L_{match}=-1_{c_i=\varnothing}\hat{p}_ {\sigma(i)}(c_i)+1_ {c_i\ne \varnothing}L_{box}(b_i,\hat{b}_ {\sigma(i)})$$
+最后，整体的损失函数定义如下（这里，匈牙利算法可以为初始状态提供一个较佳的二分匹配,参考3.1附录)：
+$$L_{Hungarian}(y,\hat{y})=\sum^{N}_ {i=1}[-\log\hat{p}_ {\hat{\sigma}(i)}(c_i)+1_ {c_i\ne \varnothing}L_{box}(b_i,\hat{b}_ {\sigma(i)})]$$
+其中，$\sigma$通过第一个式子得到，考虑到在匹配时存在类别的不平衡($c_i=\varnothing$),在实际计算时改变了对数部分的损失权重（类似于做到Faster R-CNN中正负样本比例为$1:3$)。同时，上述第一项中由于某些标注信息集合内的$c_i=\varnothing$,所以该部分的分类损失为定值；而回归损失通过示性函数可以计算得到为零。
+
+对于回归损失项，以前的目标检测算法的回归目标大都是预测值相对于标注信息的偏移(offset)，而文中使用的是直接回归的方式，DETR的回归损失结合$l_1$损失和$GIoU$损失。其定义如下：
+$$L_{box}(b_i,\hat{b}_ {\hat{\sigma}(i)})=\lambda_{iou}L_{iou}(b_i,\hat{b}_ {\hat{\sigma}(i)})+\lambda_{L_1}||b_i-\hat{b}_ {\hat{\sigma}(i)}||_ {1}$$
+其中$\lambda_\ast$是超参数。
+
+
+#### 附录3.1二分图匹配和匈牙利算法
+
+**二分图**
+
+二分图又称作二部图，是图论中的一种特殊模型。 设$G=(V,E)$是一个无向图，如果顶点$V$可分割为两个互不相交的子集$(A,B)$，并且图中的每条边$(i,j)$所关联的两个顶点$i$和$j$分别属于这两个不同的顶点集$(i\in A,j\in B)$，则称图$G$为一个二分图。
+
+简单的说，一个图被分成了两部分，相同的部分没有边，那这个图就是二分图，二分图是特殊的图。
+
+**匹配**
+
+给定一个二分图$G$，在$G$的一个子图$M$中，$M$的边集${E}$中的任意两条边都不依附于同一个顶点，则称$M$是一个匹配。图中加粗的边是数量为2的匹配。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p4.png" /> 
+</div>
+
+**最大匹配**
+
+选择边数最大的子图称为图的最大匹配问题(maximal matching problem) 
+如果一个匹配中，图中的每个顶点都和图中某条边相关联，则称此匹配为完全匹配，也称作完备匹配。 
+下图中左边所示为一个最大匹配，但不是完全匹配。右边是个完全匹配。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p5.png" /> 
+</div>
+
+**增广路径**
+
+也称增广轨或交错轨。设$M$为二分图$G$已匹配边的集合，若$P$是图$G$中一条联通两个未匹配顶点的路径，且属于$M$的边和不属于$M$的边在$P$上交替出现，则称$P$为相对于$M$的一条增广路径。$P$的起点在$X$部，终点在$Y$部，反之亦可，路径$P$的起点终点都是未匹配的点。
+
+增广路径是一条“交错轨”。也就是说, 它的第一条边是目前还没有参与匹配的,第二条边参与了匹配,第三条边没有...最后一条边没有参与匹配,并且起点和终点还没有被选择过，这样交错进行,显然$P$有奇数条边，因为不属于匹配的边比匹配的边要多一条！
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p6.png" /> 
+</div>
+
+如上图，红边为三条已经匹配的边。从`X`部一个未匹配的顶点`x4`开始，找一条路径`P： x4y3-y3x2-x2y1-y1x1-x1y2`
+因为`y2`是`Y`部中未匹配的顶点，`x4`是`X`部中未匹配的顶点，且匹配的边和未匹配的边交替出现，故所找路径是增广路径`P`。
+
+其中有属于匹配`M`的边为`{x2,y3},{x1,y1}` ，不属于匹配的边为`{x4,y3},{x2, y1}, {x1,y2}` 可以看出：`P`有奇数条边，不属于匹配的边要多一条！
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p7.png" /> 
+</div>
+
+如果从`M`中抽走`{x2,y3},{x1,y1}`，并加入`{x4,y3},{x2, y1}, {x1,y2}`，也就是将增广路所有的边进行”反色”,则可以得到四条边的匹配`M’={{x3,y4}, {x4,y3},{x2, y1}, {x1,y2}} `。如上图所示，可知四条边的匹配是最大匹配，也是完全匹配。
+容易发现这样修改以后,匹配仍然是合法的,但是匹配数增加了一对。
+
+**匈牙利算法**
+
+匈牙利算法是由匈牙利数学家Edmonds于1965年提出，因而得名。匈牙利算法是基于Hall定理中充分性证明的思想，它是部图匹配最常见的算法，该算法的核心就是寻找**增广路径**，它是一种用增广路径求二分图最大匹配的算法。 通过一个有趣的例子来说明该过程：
+
+通过数代人的努力，你终于赶上了剩男剩女的大潮，假设你是一位光荣的新世纪媒人，在你的手上有`N`个剩男，`M`个剩女，每个人都可能对多名异性有好感（暂时不考虑特殊的性取向），如果一对男女互有好感，那么你就可以把这一对撮合在一起，现在让我们无视掉所有的单相思（好忧伤的感觉快哭了），你拥有的大概就是下面这样一张关系图，每一条连线都表示互有好感。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p8.png" /> 
+</div>
+
+本着救人一命，胜造七级浮屠的原则，你想要尽可能地撮合更多的情侣，匈牙利算法的工作模式会教你这样做：
+
+1.先试着给1号男生找妹子，发现第一个和他相连的1号女生还名花无主，got it，连上一条蓝线
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p9.png" /> 
+</div>
+
+2.接着给2号男生找妹子，发现第一个和他相连的2号女生名花无主，got it
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p10.png" /> 
+</div>
+
+3.接下来是3号男生，很遗憾1号女生已经有主了，怎么办呢？我们试着给之前1号女生匹配的男生（也就是1号男生）另外分配一个妹子。(黄色表示这条边被临时拆掉)
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p11.png" /> 
+</div>
+
+与1号男生相连的第二个女生是2号女生，但是2号女生也有主了，怎么办呢？我们再试着给2号女生的原配重新找个妹子(注意这个步骤和上面是一样的，这是一个递归的过程)
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p12.png" /> 
+</div>
+
+此时发现2号男生还能找到3号女生，那么之前的问题迎刃而解了，回溯回去
+2号男生可以找3号妹子~~~ 1号男生可以找2号妹子了~~~ 3号男生可以找1号妹子
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p13.png" /> 
+</div>
+
+所以第三步最后的结果就是：
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p14.png" /> 
+</div>
+
+4.接下来是4号男生，很遗憾，按照第三步的节奏我们没法给4号男生腾出来一个妹子，我们实在是无能为力了……香吉士同学走好。
+
+这就是匈牙利算法的流程，其中找妹子是个递归的过程，最最关键的字就是“腾”字。
+
+**DETR二分图匹配损失**
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p15.jpg" /> 
+</div>
+
+首先在上图的左边是机器对于一张图片的识别，通过DETR算法最终给出`N`个结果`(c,b)`，`c`代表类别，`b`代表bounding box。同时注意此时`N`是固定值(等下会解释)。在上图的右边是人工标注同一张图片，比如给出之前图片的两组真实值`(c,b)`，而其余位用空集填充到`N`项。
+
+此时我们先用二分图完美匹配算法将左右同为`N`项的结果进行一对一完美组合，这种算法叫做匈牙利算法。(经学长提醒，此处应该是匈牙利算法的进阶版EM算法)。同时我们需知道完美匹配能尽可能地把正确结果互相匹配但是也有可能出现匹配不上以及匹配错误的问题。
+
+然后我们在每条边上面计算Loss，如果匹配正确则Loss为0，如果匹配错误则Loss为某一个正数。
+
+由此我们就可以解决上述的数量和顺序匹配两个问题。如果已经匹配出图片中出现目标的数量，那么如果再多检测出一个错误的结果，此结果就会被匹配为空集，从而产生惩罚项，解决数量多或者少的问题。同时由于我们先进行匹配再进行Loss计算，因此目标被检测出来的先后顺序不会影响最终Loss的计算，解决顺序匹配问题。
+
+
+#### 3.2 DETR Architecture
+
+DETR包含以下部分：提取特征的CNN部分，Transformer的编解码结构，用于检测的前馈网络FFN。DETR的结构较灵活，能以极小代价迁移到任何带有CNN和Transformer结构的模型中。
+
+在提取特征部分，令输入图像为$x_img\in R^{3\times H0\times W0}$,经CNN得到的特征图为$f\inR^{C\times H\times W}$。特征图的通道数为2048，宽和高分别为$W0/32,H0/32$。
+
+在输入Transformer前，首先使用$1\times 1$卷积将通道数由$C$减小为$d$,得到特征图$z0\in R^{d\times H\times W}$。由于编码器通常采用序列作为输入首先将特征图的形状转化为$d\timesHW$，然后加一个位置编码共同作为编码器的输入（由于在这里，CNN没有提取图像中目标的位置信息这里在输入编码器之前加入一个可学习的位置信息，即位置编码。位置编码的概念来源于NLP,是Transformer中为了表征序列中各元素之间的位置信息）
+
+在**解码器**阶段，我们看到解码器的输入编码的输入外，还有一个名为目标查询的输入，这和Transformer的结构相对应，这表示`N`个论文中所预测目标。最后通过FFN产生边界框的坐标和类别信息。（每个预测目标单独使用一个FFN，通过并行处理，因此权重是共享的）通过编解码器的注意力机制，模型可以通过图像的全局信息来推理出预测内容和标注信息对。这就使得整个模型具有检测的功能。
+
+上面提到的FFN其实是一个带有ReLU激活函数、`d`个隐藏层单元的三层感知机。FFN预测边界框的归一化信息，并通过softmax层预测类别信息。由于模型得到的固定大小`N`（大于图像中目标数）的预测结果，那些不带有类别的结果就类似于预测结果为背景。
+
+在整个DETR架构中，第一步是用CNN(文中为ResNet-50,ResNet-101)提取图片的特征，然后叠加上位置编码，之后展开成序列状输入Transformer的encoder端。在encoder里面采用self-attention进行本身序列信息的关联度的提取，encoder输出与输入同维的序列。此序列作为条件信息(conditioning info)进行decoder对下方的object queries进行变换上的指导。在下方随机初始化`N`个object queries，经过conditioning info的指导输出为与object queries同维的结果，最终将结果进入线性FFN网络用于分类和画框。
+
+**encoder**是一个序列处理单元，因此它先将特征图展平然后输入。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p16.png" /> 
+</div>
+
+在encoder中最重要的是self-attention，即从序列中学到自身与自身相关联的信息。(关于transformer的encoder可以参考上文关于transformer的介绍)。
+
+**decoder**相对而言更加重要。首先我们说decoder是如何对Object queries进行变换的。就像我们之前说的Object queries从前面的conditioning info得到了图片特征和位置信息，然后就对图片有了整体认识。我们可以如下图方式理解。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p17.jpg" /> 
+</div>
+
+我们把这N个(图中N取100)个Object queries想象成100个"小人"，他们在观看和分析这张图片的时候有各自感兴趣的地方，比如最左边的小人他对图片最左边的区域感兴趣，第二个小人他对左边鸟所占区域感兴趣。他们问一个问题，由图片给出解答，从而获得有关感兴趣区域的答案。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p18.jpg" /> 
+</div>
+
+随着训练过程的深入，在每一层上此object query都提出一个问题并且得到解答，从而获得此区域更加多的信息，在decoder的下一层layer(decoder一共有6层layer)他就可以提出更准确的问题，从而得到更精确的细节信息。
+
+看下图是DETR论文中给出的object query的最终训练结果，我们可以看到不同的Object query在图片不同的区域的敏感程度不一样，他们覆盖了整张图片从而使得图片不同区域的细节信息都被提取出来。
+
+好，那么自然有一个问题，Object queries是如何来的？答案是随机初始化，也就是说随机初始化这些人，然后不断训练让他们从图片的不同角度去关注。(经学长提醒，这个和GAN中随机初始化有点像)。
+
+**FFN**由Object queries输出同维的结果，进入全连接神经网络进行分类，最终得出(c,b)的结果。
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p19.png" /> 
+</div>
+
+下面给出源码中给出的定义的部分：
+
+```python
+class DETR(nn.Module):
+    def __init__(self, backbone, transformer, num_classes, num_queries, aux_loss=False):
+        super().__init__()
+        # 文中使用COCO数据集，定义N=100
+        self.num_queries = num_queries
+        # transformer
+        self.transformer = transformer
+        # 隐藏层单元数量
+        hidden_dim = transformer.d_model    
+        # 由全连接得到分类embedding
+        self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
+        # 由MLP得到边界框embedding
+        self.bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
+        # 目标查询embedding
+        self.query_embed = nn.Embedding(num_queries, hidden_dim)
+        # CNN得到特征后通过1×1卷积降维
+        self.input_proj = nn.Conv2d(backbone.num_channels, hidden_dim, kernel_size=1)
+        # backbone
+        self.backbone = backbone
+        # 辅助的解码器部分的损失
+        self.aux_loss = aux_loss
+
+    def forward(self, samples: NestedTensor):
+        # 通过CNN得到特征
+        features, pos = self.backbone(samples)
+        src, mask = features[-1].decompose()
+        # 将相关内容送入transformer
+        hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight, pos[-1])[0]
+        # 分别产生分类结果和回归结果
+        outputs_class = self.class_embed(hs)
+        outputs_coord = self.bbox_embed(hs).sigmoid()
+        # 得到最终输出
+        out = {'pred_logits': outputs_class[-1], 'pred_boxes': outputs_coord[-1]}
+        if self.aux_loss:
+            out['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord)
+        return out
+```
+
+### 4.Experiments
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p20.png" /> 
+</div>
+
+*DETR与Faster RCNN的实验结果对比*
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p21.png" /> 
+</div>
+
+*编码层数量对最终结果的影响*
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p22.png" /> 
+</div>
+
+*解码层数量对最终结果的影响*
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p23.png" /> 
+</div>
+
+*位置编码对最终结果的影响*
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p24.png" /> 
+</div>
+
+*损失函数对最终结果的影响*
+
+由上图我们可以看到，由于$l_1$损失无法满足多尺度目标的检测（$l_1$针对不同尺度的目标的回归方式采样绝对值，而不能有效反应不同尺度目标与标注目标的重叠情况），所以仅使用$l_1$时效果较差。最后，作者还重新设计了检测头，将DETR用于全景分割。下图展示了相关全景分割方法的实验结果对比：
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p25.png" /> 
+</div>
+
+*DETR用于全景分割的实验结果对比*
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p26.png" /> 
+</div>
+
+*DETR用于全景分割的结构*
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p27.png" /> 
+</div>
+
+*DETR目标检测demo*
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/p28.png" /> 
+</div>
+
+*DETR全景分割demo*
+
+
+### 5.Conclusion
+
+由全文可以看到，将Transformer应用于目标检测中同样能取得不错的结果。同时我们要看到，论文中使用的DETR仅是普通CNN、Transformer和FFN的结合，类似于目标检测中的主干网络、网络颈以及网络头，期间不添加其他的操作。论文的关键是将特征输入Transformer后依旧要保持目标的位置信息以及最后通过合适的方法将预测结果同标注信息匹配。总的来说，这是当前目标检测领域内比较新的一种思路。同时在论文中，作者也提出为原始模型中加入FPN以改善小目标的检测结果。
+
+我们基于公司业务训练了DETR模型，详细可以参考我们在GitHub的Repo: <>, 这里给出相应的测试demo的测试结果：
+
