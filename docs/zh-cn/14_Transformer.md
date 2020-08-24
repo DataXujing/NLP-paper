@@ -986,5 +986,14 @@ class DETR(nn.Module):
 
 由全文可以看到，将Transformer应用于目标检测中同样能取得不错的结果。同时我们要看到，论文中使用的DETR仅是普通CNN、Transformer和FFN的结合，类似于目标检测中的主干网络、网络颈以及网络头，期间不添加其他的操作。论文的关键是将特征输入Transformer后依旧要保持目标的位置信息以及最后通过合适的方法将预测结果同标注信息匹配。总的来说，这是当前目标检测领域内比较新的一种思路。同时在论文中，作者也提出为原始模型中加入FPN以改善小目标的检测结果。
 
-我们基于公司业务训练了DETR模型，详细可以参考我们在GitHub的Repo: <>, 这里给出相应的测试demo的测试结果：
+我们基于公司业务训练了DETR模型，详细可以参考我们在GitHub的Repo: <https://github.com/DataXujing/detr_transformer>, 这里给出相应的测试demo的测试结果和训练的log的可视化：
 
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/demo.jpg" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/transformer/detr/log.png" /> 
+</div>
+
+我们发现detr结果并不如Efficientdet-d2!!!
