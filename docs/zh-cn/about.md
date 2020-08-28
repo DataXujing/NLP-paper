@@ -35,6 +35,8 @@
 |2020-08-17            |  Vanilla Transformer     |
 |2020-08-17            |  Transformer-XL          |
 |2020-08-19            |  DETR                    |
+|2020-08-28            |  BERT                    |
+
 
 
 
