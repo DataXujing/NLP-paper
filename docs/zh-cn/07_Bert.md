@@ -504,3 +504,182 @@ $$P_i=\dfrac{e^{V \cdot C_i}}{\sum_j^4 e^{S \cdot C_j}}$$
 
 
 ## ALBERT: A Lite BERT for Self-supervised Learning of Language Representations
+
+<!-- https://wmathor.com/index.php/archives/1480/ -->
+<!-- https://blog.csdn.net/jiaowoshouzi/article/details/102320781 -->
+<!-- https://blog.csdn.net/u012526436/article/details/101924049 -->
+<!-- https://blog.csdn.net/weixin_37947156/article/details/101529943 -->
+
+<!-- https://www.bilibili.com/video/BV1C7411c7Ag?from=search&seid=11518776277468921446 -->
+<!-- https://www.bilibili.com/video/BV1uA411n7sC?from=search&seid=11518776277468921446 -->
+
+RoBERTa没霸榜几天，这不Google就又放大招，这次的新模型不再是简单的的升级，而是采用了全新的参数共享机制，反观其他升级版BERT模型，基本都是添加了更多的预训练任务，增大数据量等轻微的改动。这次ALBERT的改进，不仅提升了模型的整体效果再一次拿下来各项榜单的榜首，而且参数量相比BERT来说少了很多。
+
+对于预训练模型来说，提升模型的大小是能对下游任务的效果有一定提升，然而如果进一步提升模型规模，势必会导致显存或者内存出现OOM的问题，长时间的训练也可能导致模型出现退化的情况。为了解决这些问题，Google提出了ALBERT，该模型提出了两种减少内存的方法，同时提升了训练速度(很遗憾对于较深较宽的模型推断时间变慢了），其次改进了BERT中的NSP的预训练任务。
+
+**内存限制**
+
+考虑一个包含一个输入节点，两个隐藏节点和一个输出节点的简单神经网络。即使是这样一个简单的神经网络，由于每个节点有权重和偏差，因此总共有 7 个参数需要学习
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p1.png" /> 
+</div>
+
+BERT-large 是一个复杂的模型，它有 24 个隐藏层，在前馈网络和多头注意力机制中有很多节点，总共有 3.4 亿个参数，如果想要从零开始训练，需要花费大量的计算资源
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p2.png" /> 
+</div>
+
+**模型退化**
+
+最近在 NLP 领域的研究趋势是使用越来越大的模型，以获得更好的性能。ALBERT 的研究表明，无脑堆叠模型参数可能导致效果降低。在论文中，作者做了一个有趣的实验
+
+>如果更大的模型可以带来更好的性能，为什么不将最大的 BERT 模型 (BERT-large) 的隐含层单元增加一倍，从 1024 个单元增加到 2048 个单元呢？
+
+他们称之为 "BERT-xlarge"。令人惊讶的是，无论是在语言建模任务还是阅读理解测试（RACE）中，这个更大的模型的表现都不如 BERT-large,从原文给出的图中（下图），我们可以看到性能是如何下降的
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p3.png" /> 
+</div>
+
+ALBERT也是采用和BERT一样的Transformer的encoder结果，激活函数使用的也是GELU，在讲解下面的内容前，我们规定几个参数，词的embedding我们设置为E，encoder的层数我们设置为L，hidden size即encoder的输出值的维度我们设置为H，前馈神经网络的节点数设置为4H，attention的head个数设置为H/64。
+
+在ALBERT中主要有三个改进方向。
+
+### 1.对Embedding因式分解（Factorized embedding parameterization）
+
+原始的 BERT 模型以及各种依据 Transformer 的预训连语言模型都有一个共同特点，即 `E=H`，其中 `E` 指的是 Embedding Dimension，`H` 指的是 Hidden Dimension。这就会导致一个问题，当提升 Hidden Dimension 时，Embedding Dimension 也需要提升，最终会导致参数量呈平方级的增加。所以 ALBERT 的作者将 E 和 H 进行解绑，具体的操作就是在 Embedding 后面加入一个矩阵进行维度变换。E 的维度是不变的，如果 H 增大了，我们只需要在 E 后面进行一个升维操作即可
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p4.png" /> 
+</div>
+
+
+所以，ALBERT 不直接将原本的 one-hot 向量映射到 hidden space size of H，而是分解成两个矩阵，原本参数数量为 `V∗H`，V 表示的是 Vocab Size。分解成两步则减少为 `V∗E+E∗H`，当 H 的值很大时，这样的做法能够大幅降低参数数量
+
+> V∗H=30000∗768=23,040,000
+> V∗E+E∗H=30000∗256+256∗768=7,876,608
+> 举个例子，当 V 为 30000，H 为 768，E 为 256 时，参数量从 2300 万降低到 780 万
+
+
+在BERT、XLNet、RoBERTa中，词表的embedding size(E)和transformer层的hidden size(H)都是相等的，这个选择有两方面缺点：
+
++ 从建模角度来讲，wordpiece向量应该是不依赖于当前内容的(context-independent)，而transformer所学习到的表示应该是依赖内容的。所以把E和H分开可以更高效地利用参数，因为理论上存储了context信息的H要远大于E。
++ 从实践角度来讲，NLP任务中的vocab size本来就很大，如果`E=H`的话，模型参数量就容易很大，而且embedding在实际的训练中更新地也比较稀疏。
+
+因此作者使用了小一些的`E(64、128、256、768)`，训练一个独立于上下文的embedding`(VxE)`，之后计算时再投影到隐层的空间(乘上一个`ExH`的矩阵)，相当于做了一个因式分解。
+
+下图是E选择不同值的一个实验结果，尴尬的是，在不采用参数共享优化方案时E设置为768效果反而好一些，在采用了参数共享优化方案时E取128效果更好一些。
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p5.png" /> 
+</div>
+
+
+### 2.跨层的参数共享（Cross-layer parameter sharing）
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p6.png" /> 
+</div>
+
+在ALBERT还提出了一种参数共享的方法，Transformer中共享参数有多种方案，只共享全连接层，只共享attention层，ALBERT结合了上述两种方案，全连接层与attention层都进行参数共享，也就是说共享encoder内的所有参数，同样量级下的Transformer采用该方案后实际上效果是有下降的，但是参数量减少了很多，训练速度也提升了很多。
+
+下图是BERT与ALBERT的一个对比，以base为例，BERT的参数是108M，而ALBERT仅有12M，但是效果的确相比BERT降低了两个点。由于其速度快的原因，我们再以BERT-xlarge为参照标准其参数是1280M，假设其训练速度是1，ALBERT的xxlarge版本的训练速度是其1.2倍，并且参数也才223M，评判标准的平均值也达到了最高的88.7
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p7.png" /> 
+</div>
+
+除了上述说了训练速度快之外，ALBERT每一层的输出的embedding相比于BERT来说震荡幅度更小一些。下图是不同的层的输出值的L2距离与cosine相似度，可见参数共享其实是有稳定网络参数的作用的。
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p8.png" /> 
+</div>
+
+
+
+### 3.句间连贯（Inter-sentence coherence loss）（SOP）
+
+后BERT时代很多研究(XLNet、RoBERTa)都发现next sentence prediction没什么用处，所以作者也审视了一下这个问题，认为NSP之所以没用是因为这个任务不仅包含了句间关系预测，也包含了主题预测，而主题预测显然更简单些（比如一句话来自新闻财经，一句话来自文学小说），模型会倾向于通过主题的关联去预测。因此换成了SOP(sentence order prediction)，预测两句话有没有被交换过顺序。实验显示新增的任务有1个点的提升。
+
+BERT的NSP任务实际上是一个二分类，训练数据的正样本是通过采样同一个文档中的两个连续的句子，而负样本是通过采用两个不同的文档的句子。该任务主要是希望能提高下游任务的效果，例如NLI自然语言推理任务。但是后续的研究发现该任务效果并不好，主要原因是因为其任务过于简单。NSP其实包含了两个子任务，主题预测与关系一致性预测，但是主题预测相比于关系一致性预测简单太多了，并且在MLM任务中其实也有类型的效果。
+
+这里提一下为啥包含了主题预测，因为正样本是在同一个文档中选取的，负样本是在不同的文档选取的，假如我们有2个文档，一个是娱乐相关的，一个是新中国成立70周年相关的，那么负样本选择的内容就是不同的主题，而正样都在娱乐文档中选择的话预测出来的主题就是娱乐，在新中国成立70周年的文档中选择的话就是后者这个主题了。
+
+在ALBERT中，为了只保留一致性任务去除主题识别的影响，提出了一个新的任务 sentence-order prediction（SOP），SOP的正样本和NSP的获取方式是一样的，负样本把正样本的顺序反转即可。SOP因为实在同一个文档中选的，其只关注句子的顺序并没有主题方面的影响。并且SOP能解决NSP的任务，但是NSP并不能解决SOP的任务，该任务的添加给最终的结果提升了一个点。
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p9.png" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p10.png" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p11.png" /> 
+</div>
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p12.png" /> 
+</div>
+
+
+### 4.其他Trick
+
+
+**1.删除Dropout**
+
+Dropout个人觉得可以一开始就不用，而不是训练一段时间再关掉。学都学不动，防啥过拟合啊。模型的内部任务（MLM，SOP等等）都没有过拟合dropout是为了降低过拟合而增加的机制，所以对于bert而言是弊大于利的机制
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p13.png" /> 
+</div>
+
+如上图所示，ALBERT的最大模型在训练1M步后仍然没有过拟合，于是作者决定删除dropout，进一步提高模型能力。
+
+**2.LAMB优化器**
+
+为加快训练速度，使用LAMB做为优化器。LAMB优化器使得我们可以训练，特别大的批次batch_size，如高达6万。
+
++ https://arxiv.org/abs/1904.00962
+
+**3.Segments-Pair**
+
+BERT为了加速训练，前90%的steps使用了128个token的短句子，最后10%才使用512个token的长句子训练位置向量。
+ALBERT貌似90%的情况下使用512的segment，从数据上看，更长的数据提供更多的上下文信息，可能显著提升模型的能力。
+
+**4.Masked-ngram-LM**
+
+BERT的MLM目标是随机MASK 15%的词来预测，ALBERT预测的是N-gram片段，包含更多的语义信息，每个片段长度`n`（最大为3），根据概率公式计算得到。比如uni-gram、bi-gram、tri-gram的的概率分别为`6/11`、`3/11`、`2/11`。越长概率越小：
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p14.png" /> 
+</div>
+
+<!-- 本项目中目前使用的是在中文上做whole word mask，稍后会更新一下与n-gram mask的效果对比。n-gram从spanBERT中来。 -->
+
+
+### 5.总结
+
+刚开始看这篇文章是很惊喜的，因为它直接把同等量级的 BERT 缩小了 10 + 倍，让普通用户有了运行可能。但是仔细看了实验后才发现参数量的减小是需要付出代价的
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p15.png" /> 
+</div>
+
+需要注意的是，Speedup 是训练时间而不是 Inference 时间。Inference 时间并未得到改善，因为即使是使用了共享参数机制，还是得跑完 12 层 Encoder，故 Inference 时间跟 BERT 是差不多的。
+
+实验用的参数如下
+
+<div align=center>
+    <img src="zh-cn/img/bert/albert/p16.png" /> 
+</div>
+
+可以得出的结论是：
+
++ 在相同的训练时间下，ALBERT 得到的效果确实比 BERT 好
++ 在相同的 Inference 时间下，ALBERT base 和 large 的效果都没有 BERT 好，而且差了 2-3 个点，作者在最后也提到了会继续寻找提高速度的方法（Sparse attention 和 Block attention）
+
+另外，结合 Universal Transformer 可以想到的是，在训练和 Inference 阶段可以动态地调整 Transformer 层数（告别 12、24、48 的配置）。同时可以想办法去避免纯参数共享带来的效果下降，毕竟 Transformer 中越深层学到的任务相关信息越多，可以改进 Transformer 模块，加入记忆单元、每层个性化的 Embedding。
