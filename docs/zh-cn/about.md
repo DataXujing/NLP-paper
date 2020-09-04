@@ -40,7 +40,30 @@
 |2020-09-01            |  XLNet                   |
 |2020-09-02            |  GPT-1                   |
 |2020-09-03            |  GPT-2                   |
+|2020-09-04            |  GPT-3                   |
 
+**TODO**
+
+近两年关于Transformer和BERT相关的魔改非常非常多，但是当你熟悉了上述更新的内容后，其他方法就变得简单。
+
+未来我们根据时间安排，也许会更新如下其他NLP相关算法的详细讲解和paper解读及coding案例(注：我们提供了paper的下载地址和完整的paper,标\*建议必读)
+
+* [ ] Bert与模型蒸馏：DistillBert\*
+* [ ] Tiny-Bert:模型蒸馏的全方位应用
+* [ ] MobileBert: Pixel4上推算速度仅需要40ms
+* [ ] SpanBert\*
+* [ ] VisualBERT
+* [ ] ViLBERT
+* [ ] VideoBERT
+* [ ] Bert与AutoML
+* [ ] RoBerta\*
+* [ ] Transformer优化之自适应宽度注意力
+* [ ] Reformer: 局部敏感哈希和可逆残差带来的高效
+* [ ] Longformer: 局部attentoin和全局attention的混搭
+* [ ] Linformer
+* [ ] T5\*
+* [ ] MASS\*
+* [ ] ERNIE\*,ERNIE2\*
 
 
 

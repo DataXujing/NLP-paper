@@ -776,3 +776,190 @@ Gage, Philip(1994)提出了一种数据压缩算法，叫做字节对编码(Byte
 ------
 
 ## GPT-3: Language Models are Few-Shot Learners
+
+
+<!-- https://blog.csdn.net/weixin_42137700/article/details/107893052 -->
+<!-- http://www.360doc.com/content/20/0804/08/7673502_928418449.shtml -->
+<!-- https://blog.csdn.net/weixin_42137700/article/details/107860376 -->
+
+<!-- https://www.bilibili.com/video/BV1TA411Y75b?p=2 -->
+<!-- https://www.bilibili.com/video/BV1FA411B7Sp?from=search&seid=3700057539523989190 -->
+<!-- https://www.bilibili.com/video/BV1At4y1D7dV?from=search&seid=3700057539523989190 -->
+
+<!-- https://mp.weixin.qq.com/s/ZuJipGApFAsFJtBNSgBcRg -->
+<!-- https://huggingface.co/transformers/tokenizer_summary.html -->
+<!-- https://blog.csdn.net/weixin_41089007/article/details/106501248 -->
+<!-- https://zhuanlan.zhihu.com/p/174127926?utm_source=wechat_session&utm_medium=social&utm_oi=873108524698308608&utm_campaign=shareopn -->
+<!-- https://zhuanlan.zhihu.com/p/210392010?utm_source=wechat_session&utm_medium=social&utm_oi=873108524698308608&utm_campaign=shareopn -->
+
+<!-- https://zhuanlan.zhihu.com/p/148488261?utm_source=wechat_session&utm_medium=social&utm_oi=873108524698308608&utm_campaign=shareopn -->
+<!-- https://mbd.baidu.com/newspage/data/landingshare?pageType=1&isBdboxFrom=1&uk=dOycTSIJne3oxxhcIEX-NQ&context=%7B%22nid%22%3A%22news_9817526512547947949%22%7D -->
+
+<video id="video" controls="" preload="none" poster="http://om2bks7xs.bkt.clouddn.com/2017-08-26-Markdown-Advance-Video.jpg" width="1000">
+<source id="mp4" src="zh-cn/img/gpt/gpt3/GPT-3.mp4" type="video/mp4">
+</video>
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p0.png" /> 
+</div>
+
+### 1.模型结构和参数量
+
+**模型结构：**
+
+该研究使用了和 GPT-2 相同的模型和架构，包括改进的初始设置、预归一化和 reversible tokenization。区别在于 GPT-3 在 transformer 的各层上都使用了交替密集和局部带状稀疏的注意力模式，类似于 Sparse Transformer [CGRS19]（感兴趣可以自行研究）。
+
+为了研究性能对模型大小的依赖性，该研究训练了 8 种不同的模型大小，涵盖 3 个数量级，从 1.25 亿参数到 1750 亿个参数不等，具备 1750 亿个参数的模型即为 GPT-3。
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p1.png" /> 
+</div>
+
+上图表展示了 8 个模型的大小和架构。这里 $n_{params}$表示可训练参数总量，$n_{layers}$ 表示层数，$d_{model}$表示每个瓶颈层中的单元数量（在该研究中前馈层总是瓶颈层大小的 4 倍，即 $d_{ff} = 4 d_{model}$），$d_{head}$ 表示每个注意力头的维度。所有的模型均使用 $n_{ctx} = 2048 tokens$的语境窗口。
+
+**参数量:**
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p2.png" /> 
+</div>
+
+和往常一样，GPT-3 立即放出了 GitHub 项目页面，不过目前仅是一些生成样本和数据集，还没有代码：<https://github.com/openai/gpt-3>。
+
+不过上传的没有那么快其实情有可原，在 issue 里有人道出了真相：参数这么多，如果按照 GPT-2 15亿参数等于 6G 这么算的话，GPT-3 模型可能要 700G，老硬盘还装不下，个人和没有实力的企业就不要在考虑使用这个模型了！！！
+
+**训练成本:**
+
++ 有一种说法是训练GPT-3花费了460万美元:
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p3.gif" /> 
+</div>
+
+有人对GPT的未来进行了描绘。「GPT-4 将会比人类写得更好，而且，当它对自己的答案不确定时，还可以进行研究。」GPT-4作为进阶版，将更有钻研精神。
+
+此前Open AI的论文中曾经提到，自2012年以来，要训练一个人工智能模型在基准测试ImageNet图像分类任务中达到同等的分类效果，所需的算力每16个月就会减少1/2。算法演进速度吊打摩尔定律。
+
+也就是说，在过去的7年内，训练神经网络的效率每16个月就会翻一番。照这个速度，新一代的GPT或许会cheap&good！
+
+MIT研究员Lex Fridman预测，训练GPT-4预计会花费26亿美元。2024年，训练GPT-4只需要花费4000万美元，到2032年，估计只需要花费500万美元。
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p4.png" /> 
+</div>
+
++ 另一种说法是训练GPT-3需要1200万美元
+
+你肯定想问这样一个问题：训练 GPT-3 模型需要花多少钱？我们目前还只能粗略地估计——训练一个 BERT 模型租用云算力要花大概 6912 美元，训练 GPT-2 每小时要花费 256 美元，但 OpenAI 一直没有透露一共要花多少小时。
+
+相比之下，GPT-3 需要的算力（flops）是 BERT 的 1900 多倍，所以这个数字应该是千万美元级别的，以至于研究者在论文第九页说：我们发现了一个 bug，但没钱再去重新训练模型，所以先就这么算了吧。
+
+
+### 2.GPT-3的训练数据
+
+GPT-3使用了**45TB**数据进行训练
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p5.png" /> 
+</div>
+
+
+### 3.GPT-3的核心创新点
+
+训练方法，去掉了Fine-Tuning
+
++ 传统方法：Fine-Tuning
++ GPT-3使用方法：
+
+OpenAI 团队使用的基础预训练方法包括模型、数据与训练三部分。GPT-3 的训练过程与 GPT-2 类似，但对模型大小、数据集大小与多样性、训练长度都进行了相对直接的扩充。关于语境学习，GPT-3 同样使用了与 GPT-2 类似的方法，不过 GPT-3 研究团队系统地探索了不同的语境学习设定。
+
+OpenAI 团队明确地定义了用于评估 GPT-3 的不同设定，包括 zero-shot、one-shot 和 few-shot。
+
+**Few-Shot（FS）：**指的是在推理时对模型进行一些任务相关的示例演示，但不允许权重更新。如图2.1所示，对于一个典型的数据集，一个示例具有上下文和所需的补全（例如英语句子和对应的法语句子），并通过给出K个示例上下文和补全的例子进行了Few-Shot。我们通常将K设置在10到100的范围内。FS的主要优点是，大大减少了对特定任务数据的需求，并减少了过拟合的可能性。主要缺点是，到目前为止，这种方法的结果要比最新的微调模型差很多。而且，仍然需要少量的任务特定数据。
+
+**One-Shot(1S)：**和FS一样，不允许权重更新，但是k设置为1，和人类处理任务最为相似。
+
+**Zero-Shot (0S) ：**没有示例演示，仅向模型提供描述任务的自然语言指令，同样没有权重更新。
+
+四种方法对比见下图:
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p6.png" /> 
+</div>
+
+上图以英-法翻译任务为例，展示了四种方法。该研究将重点放在 zero-shot、one-shot 和 few-shot 上，其目的并非将它们作为竞品进行比较，而是作为不同的问题设置。OpenAI 团队特别强调了 few-shot 结果，因为其中许多结果仅仅略微逊色于 SOTA 微调模型。不过，用 one-shot 甚至有时是 zero-shot 与人类水平进行对比似乎最为公平，这也是未来工作的重要目标之一。
+
+### 4.部分有意思的测试结果
+
+关于测试结果，详细的可以参考GPT-3的原始论文，这里仅展示部分有意思的此时结果。
+
+**新闻生成**
+
+据《华盛顿邮报》报道，经过两天的激烈辩论，联合卫理公会同意了一次历史性的分裂：要么创立新教派，要么则在神学和社会意义上走向保守。大部分参加五月份教会年度会议的代表投票赞成加强任命 LGBTQ 神职人员的禁令，并制定新的规则「惩戒」主持同性婚礼的神职人员。但是反对这些措施的人有一个新计划：2020 年他们将形成一个新教派「基督教卫理公会」。
+
+《华盛顿邮报》指出，联合卫理公会是一个自称拥有 1250 万会员的组织，在 20 世纪初期是「美国最大的新教教派」，但是近几十年来它一直在萎缩。这次新的分裂将是该教会历史上的第二次分裂。第一次发生在 1968 年，当时大概只剩下 10% 的成员组成了「福音联合弟兄会」。《华盛顿邮报》指出，目前提出的分裂「对于多年来成员不断流失的联合卫理公会而言，来得正是时候」，这「在 LGBTQ 角色问题上将该教派推向了分裂边缘」。同性婚姻并不是分裂该教会的唯一问题。2016 年，该教派因跨性别神职人员的任命而分裂。北太平洋地区会议投票禁止他们担任神职人员，而南太平洋地区会议投票允许他们担任神职人员。
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p7.png" /> 
+</div>
+
+这确定不是报刊记者撰写的短新闻吗？
+
+给出标题「联合卫理公会同意这一历史性分裂」和子标题「反对同性恋婚姻的人将创建自己的教派」，GPT-3 生成了上述新闻。
+
+在 OpenAI 的测试中，人类评估人员也很难判断出这篇新闻的真假，检测准确率仅为 12%。
+
+**GPT-3 的造句能力**
+
+给出一个新单词及其定义，造出一个新句子。难吗？这需要你理解单词的意义及适用语境。OpenAI 研究者测试了 GPT-3 在这一任务上的能力：给出一个不存在的单词（如「Gigamuru」），令 GPT-3 使用它造句
+
+我们来看 GPT-3 的生成结果：
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p8.png" /> 
+</div>
+
+给出新单词「Gigamuru」（表示一种日本乐器）。GPT-3 给出的句子是：叔叔送了我一把 Gigamuru，我喜欢在家弹奏它。严丝合缝，非常合理，完美！
+
+**语法纠错**
+
+给出一句带有语法错误的话，让 GPT-3 进行修改。
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p10.png" /> 
+</div>
+
+第一个例子中，原句里有两个并列的动词「was」和「died」，GPT-3 删除系动词「was」，将其修改为正确的句子。
+
+**GPT-3 还能做计算题？**
+
+penAI 研究人员在以下 10 项任务中测试了 GPT-3 做简单计算的能力，且无需任何任务特定的训练。
+
+这十项任务分别是：两位数加减法、三位数加减法、四位数加减法、五位数加减法、两位数乘法，以及一位数混合运算。
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p9.png" /> 
+</div>
+
+用于测试 GPT-3 计算能力的十项任务。
+
+在这十项任务中，模型必须生成正确的答案。对于每项任务，该研究生成包含 2000 个随机实例的数据集，并在这些实例上评估所有模型。
+
+下图展示了 GPT-3（few-shot）在这十项计算任务上的性能。从图中可以看到，小模型的性能较差，即使是拥有 130 亿参数的模型（仅次于拥有 1750 亿的 GPT-3 完整版模型）处理二位数加减法的准确率也只有 50% 左右，处理其他运算的准确率还不到 10%。
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p11.png" /> 
+</div>
+
+**GPT-3生成articles**
+
+<div align=center>
+    <img src="zh-cn/img/gpt/gpt3/p12.png" /> 
+</div>
+
+
+还有很多很多GPT-3的实验，可以参考原论文！
+
+当然也有很多人对GPT-3的识别效果产生了质疑：[马库斯开喷GPT-3：演员而已，它根本不知道自己在说什么](https://zhuanlan.zhihu.com/p/210392010?utm_source=wechat_session&utm_medium=social&utm_oi=873108524698308608&utm_campaign=shareopn)
+
+GPT-3的模型和代码并没有开源，即使开源我们也无法使用！！！
+
