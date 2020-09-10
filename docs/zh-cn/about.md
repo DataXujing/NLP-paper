@@ -41,6 +41,8 @@
 |2020-09-02            |  GPT-1                   |
 |2020-09-03            |  GPT-2                   |
 |2020-09-04            |  GPT-3                   |
+|2020-09-10            |  RoBERTa                 |
+
 
 **TODO**
 
@@ -56,7 +58,7 @@
 * [ ] ViLBERT
 * [ ] VideoBERT
 * [ ] Bert与AutoML
-* [ ] RoBerta\*
+* [x] RoBerta\*
 * [ ] Transformer优化之自适应宽度注意力
 * [ ] Reformer: 局部敏感哈希和可逆残差带来的高效
 * [ ] Longformer: 局部attentoin和全局attention的混搭

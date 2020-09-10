@@ -683,3 +683,140 @@ BERT的MLM目标是随机MASK 15%的词来预测，ALBERT预测的是N-gram片�
 + 在相同的 Inference 时间下，ALBERT base 和 large 的效果都没有 BERT 好，而且差了 2-3 个点，作者在最后也提到了会继续寻找提高速度的方法（Sparse attention 和 Block attention）
 
 另外，结合 Universal Transformer 可以想到的是，在训练和 Inference 阶段可以动态地调整 Transformer 层数（告别 12、24、48 的配置）。同时可以想办法去避免纯参数共享带来的效果下降，毕竟 Transformer 中越深层学到的任务相关信息越多，可以改进 Transformer 模块，加入记忆单元、每层个性化的 Embedding。
+
+
+
+## RoBERTa: A Robustly Optimized BERT Pretraining Approach
+
+<!-- https://www.cnblogs.com/ffjsls/p/12260785.html -->
+<!-- https://mp.weixin.qq.com/s/iqY94mynw_as5l_L7xn7-w -->
+
+先来回顾一下Bert中的一些细节：
+
++ 在输入上，Bert的输入是两个segment，其中每个segment可以包含多个句子，两个segment用`[SEP]`拼接起来。
++ 模型结构上，使用Transformer，这点跟Roberta是一致的。
++学习目标上，使用两个目标：
+    - Masked Language Model(MLM): 其中`15%`的token要被Mask，在这`15%`里，有`80%`被替换成`[Mask]`标记，有`10%`被随机替换成其他token，有`10%`保持不变。
+    - Next Sentence Prediction: 判断segment对中第二个是不是第一个的后续。随机采样出`50%`是和`50%`不是。
++ Optimizations:
+    - Adam, beta1=0.9, beta2=0.999, epsilon=1e-6, L2 weight decay=0.01
+    - learning rate, 前10000步会增长到1e-4, 之后再线性下降。
+    - dropout=0.1
+    - GELU激活函数
+    - 训练步数：1M
+    - mini-batch: 256
+    - 输入长度: 512
++ Data
+    - BookCorpus + English Wiki = 16GB
+
+
+<!-- Roberta在如下几个方面对Bert进行了调优：
+
+- Masking策略——静态与动态
+- 模型输入格式与Next Sentence Prediction
+- Large-Batch
+- 输入编码
+- 大语料与更长的训练步数
+ -->
+
+RoBERTa是在论文《RoBERTa: A Robustly Optimized BERT Pretraining Approach》中被提出的。此方法属于BERT的强化版本，也是BERT模型更为精细的调优版本。RoBERTa主要在三方面对之前提出的BERT做了该进，其一是模型的具体细节层面，改进了优化函数；其二是训练策略层面，改用了动态掩码的方式训练模型，证明了NSP（Next Sentence Prediction）训练策略的不足，采用了更大的batch size；其三是数据层面，一方面使用了更大的数据集，另一方面是使用BPE（Byte-Pair Encoding ）来处理文本数据。
+
+### 1.RoBERTa对一般BERT的模型细节进行了优化
+
+**Optimization**
+
+​原始BERT优化函数采用的是Adam默认的参数，其中`β1=0.9,β2=0.999`，在RoBERTa模型中考虑采用了更大的batches，所以将`β2`改为了`0.98`。
+
+### 2.RoBARTa对一般BERT的训练策略进行了优化
+
+（1）动态掩码与静态掩码
+
+**原始静态mask：**
+BERT中是准备训练数据时，每个样本只会进行一次随机mask（因此每个epoch都是重复），后续的每个训练步都采用相同的mask，这是原始静态mask，即单个静态mask，这是原始 BERT 的做法。
+
+**修改版静态mask：**
+在预处理的时候将数据集拷贝 10 次，每次拷贝采用不同的 mask（总共40 epochs，所以每一个mask对应的数据被训练4个epoch）。这等价于原始的数据集采用10种静态 mask 来训练 40个 epoch。
+
+**动态mask：**
+并没有在预处理的时候执行 mask，而是在每次向模型提供输入时动态生成 mask，所以是时刻变化的。
+不同模式的实验效果如下表所示。其中 reference 为BERT 用到的原始静态 mask，static 为修改版的静态mask。
+
+<div align=center>
+    <img src="zh-cn/img/bert/roberta/p1.png" /> 
+</div>
+
+（2）对NSP训练策略的探索
+
+​ 为了探索NSP训练策略对模型结果的影响，将以下4种训练方式及进行对比：
+
+**SEGMENT-PAIR + NSP：**
+这是原始 BERT 的做法。输入包含两部分，每个部分是来自同一文档或者不同文档的 segment （segment 是连续的多个句子），这两个segment 的token总数少于 512 。预训练包含 MLM 任务和 NSP 任务。
+
+**SENTENCE-PAIR + NSP：**
+输入也是包含两部分，每个部分是来自同一个文档或者不同文档的单个句子，这两个句子的token 总数少于 512。由于这些输入明显少于512 个tokens，因此增加batch size的大小，以使 tokens 总数保持与SEGMENT-PAIR + NSP 相似。预训练包含 MLM 任务和 NSP 任务。
+
+**FULL-SENTENCES：**
+输入只有一部分（而不是两部分），来自同一个文档或者不同文档的连续多个句子，token 总数不超过 512 。输入可能跨越文档边界，如果跨文档，则在上一个文档末尾添加文档边界token 。预训练不包含 NSP 任务。
+
+**DOC-SENTENCES：**
+输入只有一部分（而不是两部分），输入的构造类似于FULL-SENTENCES，只是不需要跨越文档边界，其输入来自同一个文档的连续句子，token 总数不超过 512 。在文档末尾附近采样的输入可以短于 512个tokens， 因此在这些情况下动态增加batch size大小以达到与 FULL-SENTENCES 相同的tokens总数。预训练不包含 NSP 任务。
+
+​ 以下是论文中4种方法的实验结果：
+
+<div align=center>
+    <img src="zh-cn/img/bert/roberta/p2.png" /> 
+</div>
+
+从实验结果来看，如果在采用NSP loss的情况下，将SEGMENT-PAIR与SENTENCE-PAIR 进行对比，结果显示前者优于后者。发现单个句子会损害下游任务的性能，可能是如此模型无法学习远程依赖。接下来把重点放在没有NSP loss的FULL-SENTENCES上，发现其在四种方法中结果最好。可能的原因：原始 BERT 实现采用仅仅是去掉NSP的损失项，但是仍然保持 SEGMENT-PARI的输入形式。最后，实验还发现将序列限制为来自单个文档(doc-sentence)的性能略好于序列来自多个文档(FULL-SENTENCES)。但是 DOC-SENTENCES 策略中，位于文档末尾的样本可能小于 512 个 token。为了保证每个 batch 的 token 总数维持在一个较高水平，需要动态调整 batch-size。出于处理方便，后面采用DOC-SENTENCES输入格式。
+
+（3）Training with large batches
+
+虽然在以往的经验中，当学习速率适当提高时，采用非常大mini-batches的训练既可以提高优化速度，又可以提高最终任务性能。但是论文中通过实验，证明了更大的batches可以得到更好的结果，实验结果下表所示。
+
+<div align=center>
+    <img src="zh-cn/img/bert/roberta/p3.png" /> 
+</div>
+
+​论文考虑了并行计算等因素，在后续的实验中使用`batch size=8k`进行训练。
+
+### 3.RoBARTa在数据层面对模型进行了优化
+
+（1）使用了更大的训练数据集
+
+将16G的数据集提升到160G数据集，并改变多个steps，寻找最佳的超参数。
+
+<div align=center>
+    <img src="zh-cn/img/bert/roberta/p4.png" /> 
+</div>
+
+（2）Text Encoding
+
+字节对编码(BPE)(Sennrich et al.,2016)是字符级和单词级表示的混合，该编码方案可以处理自然语言语料库中常见的大量词汇。BPE不依赖于完整的单词，而是依赖于子词(sub-word)单元，这些子词单元是通过对训练语料库进行统计分析而提取的，其词表大小通常在 1万到 10万之间。当对海量多样语料建模时，unicode characters占据了该词表的大部分。Radford et al.(2019)的工作中介绍了一个简单但高效的BPE， 该BPE使用字节对而非unicode characters作为子词单元。
+
+总结下两种BPE实现方式：
+
++ 基于 char-level ：原始 BERT 的方式，它通过对输入文本进行启发式的词干化之后处理得到。
++ 基于 bytes-level：与 char-level 的区别在于bytes-level 使用 bytes 而不是 unicode 字符作为 sub-word 的基本单位，因此可以编码任何输入文本而不会引入 UNKOWN 标记。
+
+当采用 bytes-level 的 BPE 之后，词表大小从3万（原始 BERT 的 char-level ）增加到5万。这分别为 BERT-base和 BERT-large增加了1500万和2000万额外的参数。之前有研究表明，这样的做法在有些下游任务上会导致轻微的性能下降。但是本文作者相信：这种统一编码的优势会超过性能的轻微下降。且作者在未来工作中将进一步对比不同的encoding方案。
+
+### 总结
+
+从上面的各种实验结果中看，可以得到如下结论：
+
++ NSP不是必须的loss
++ Mask的方式虽不是最优但是已接近。
++ 增大batch size和增大训练数据能带来较大的提升。
+
+由于RoBERTa出色的性能，现在很多应用都是基于RoBERTa而不是原始的Bert去微调了。继续增大数据集，还有没有可能提升？数据集的量与所带来的提升是一个什么分布？
+不管是Bert还是Roberta，训练时间都很长，如何进行优化？
+
+**参考文献:**
+
+[1].Liu, Yinhan, et al. "Roberta: A robustly optimized bert pretraining approach." arXiv preprint arXiv:1907.11692 (2019).
+
+[2].https://mp.weixin.qq.com/s/iqY94mynw_as5l_L7xn7-w
+
+[3].https://www.cnblogs.com/ffjsls/p/12260785.html
+
+[4].https://github.com/pytorch/fairseq
