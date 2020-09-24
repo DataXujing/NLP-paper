@@ -42,6 +42,8 @@
 |2020-09-03            |  GPT-2                   |
 |2020-09-04            |  GPT-3                   |
 |2020-09-10            |  RoBERTa                 |
+|2020-09-19            |  MASS                    |
+
 
 
 **TODO**
@@ -64,8 +66,10 @@
 * [ ] Longformer: 局部attentoin和全局attention的混搭
 * [ ] Linformer
 * [ ] T5\*
-* [ ] MASS\*
+* [x] MASS\*
 * [ ] ERNIE\*,ERNIE2\*
+* [ ] BERT-wwm\*,BERT-wwm-ext\*,RoBERTa-wwm-ext\*,RoBERTa-wwm-large\*
+
 
 
 

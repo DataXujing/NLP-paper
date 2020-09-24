@@ -32,3 +32,5 @@ HomePage: [https://dataxujing.github.io/](https://dataxujing.github.io/)
 * [x] [13.Attention机制](zh-cn/13_Attention.md)
 * [x] [14.Transformer](zh-cn/14_Transformer.md)
 * [x] [15.seq2seq](zh-cn/15_seq2seq.md)
+* [x] [16.MASS](zh-cn/16_MASS.md)
+
