@@ -33,4 +33,6 @@ HomePage: [https://dataxujing.github.io/](https://dataxujing.github.io/)
 * [x] [14.Transformer](zh-cn/14_Transformer.md)
 * [x] [15.seq2seq](zh-cn/15_seq2seq.md)
 * [x] [16.MASS](zh-cn/16_MASS.md)
+* [x] [17.BI-LSTM-CRF](zh-cn/17_BILSTM-CRF.md)
+
 

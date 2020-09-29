@@ -16,6 +16,8 @@
 * [14.Transformer](zh-cn/14_Transformer.md)
 * [15.seq2seq](zh-cn/15_seq2seq.md)
 * [16.MASS](zh-cn/16_MASS.md)
+* [17.BI-LSTM-CRF](zh-cn/17_BILSTM-CRF.md)
+
 
 
 

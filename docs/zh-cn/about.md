@@ -43,6 +43,8 @@
 |2020-09-04            |  GPT-3                   |
 |2020-09-10            |  RoBERTa                 |
 |2020-09-19            |  MASS                    |
+|2020-09-29            |  BI-LSTM-CRF             |
+
 
 
 
@@ -69,6 +71,8 @@
 * [x] MASS\*
 * [ ] ERNIE\*,ERNIE2\*
 * [ ] BERT-wwm\*,BERT-wwm-ext\*,RoBERTa-wwm-ext\*,RoBERTa-wwm-large\*
+* [ ] nezha\*
+
 
 
 
