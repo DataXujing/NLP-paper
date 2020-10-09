@@ -19,6 +19,8 @@
 * [17.BI-LSTM-CRF](zh-cn/17_BILSTM-CRF.md)
 * [18.ERNIE](zh-cn/18_ernie.md)
 * [19.NEZHA](zh-cn/19_nezha.md)
+* [20.BERT-WWM](zh-cn/20_bert_wwm.md)
+
 
 
 
