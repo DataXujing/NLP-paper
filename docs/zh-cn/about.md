@@ -46,6 +46,8 @@
 |2020-09-29            |  BI-LSTM-CRF             |
 |2020-10-06            |  ERNIE                   |
 |2020-10-07            |  NEZHA                   |
+|2020-10-09            |  BERT-WWM                |
+
 
 
 
@@ -74,7 +76,7 @@
 * [ ] T5\*
 * [x] MASS\*
 * [x] ERNIE\*,ERNIE2\*
-* [ ] BERT-wwm\*,BERT-wwm-ext\*,RoBERTa-wwm-ext\*,RoBERTa-wwm-large\*
+* [x] BERT-wwm\*,BERT-wwm-ext\*,RoBERTa-wwm-ext\*,RoBERTa-wwm-large\*
 * [x] NEZHA\*
 
 
