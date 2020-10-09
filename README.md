@@ -34,5 +34,9 @@ HomePage: [https://dataxujing.github.io/](https://dataxujing.github.io/)
 * [x] [15.seq2seq](zh-cn/15_seq2seq.md)
 * [x] [16.MASS](zh-cn/16_MASS.md)
 * [x] [17.BI-LSTM-CRF](zh-cn/17_BILSTM-CRF.md)
+* [x] [18.ERNIE](zh-cn/18_ernie.md)
+* [x] [19.NEZHA](zh-cn/19_nezha.md)
+
+
 
 

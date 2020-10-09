@@ -44,6 +44,10 @@
 |2020-09-10            |  RoBERTa                 |
 |2020-09-19            |  MASS                    |
 |2020-09-29            |  BI-LSTM-CRF             |
+|2020-10-06            |  ERNIE                   |
+|2020-10-07            |  NEZHA                   |
+
+
 
 
 
@@ -69,9 +73,9 @@
 * [ ] Linformer
 * [ ] T5\*
 * [x] MASS\*
-* [ ] ERNIE\*,ERNIE2\*
+* [x] ERNIE\*,ERNIE2\*
 * [ ] BERT-wwm\*,BERT-wwm-ext\*,RoBERTa-wwm-ext\*,RoBERTa-wwm-large\*
-* [ ] nezha\*
+* [x] NEZHA\*
 
 
 

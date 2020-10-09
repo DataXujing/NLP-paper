@@ -17,6 +17,9 @@
 * [15.seq2seq](zh-cn/15_seq2seq.md)
 * [16.MASS](zh-cn/16_MASS.md)
 * [17.BI-LSTM-CRF](zh-cn/17_BILSTM-CRF.md)
+* [18.ERNIE](zh-cn/18_ernie.md)
+* [19.NEZHA](zh-cn/19_nezha.md)
+
 
 
 
