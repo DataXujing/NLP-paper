@@ -47,8 +47,7 @@
 |2020-10-06            |  ERNIE                   |
 |2020-10-07            |  NEZHA                   |
 |2020-10-09            |  BERT-WWM                |
-
-
+|2020-10-10            |  SpanBERT                |
 
 
 
@@ -63,7 +62,7 @@
 * [ ] Bert与模型蒸馏：DistillBert\*
 * [ ] Tiny-Bert:模型蒸馏的全方位应用
 * [ ] MobileBert: Pixel4上推算速度仅需要40ms
-* [ ] SpanBert\*
+* [x] SpanBert\*
 * [ ] VisualBERT
 * [ ] ViLBERT
 * [ ] VideoBERT
