@@ -1,0 +1,3 @@
+https://web.stanford.edu/~jurafsky/slp3/
+
+课程链接：http://web.stanford.edu/class/cs224n/

@@ -13,3 +13,44 @@ Attention(transformor)
 VAE
 seq2seq
 TextRank，PageRank
+
+
+
+
+徐静 (Jill Tsui):
+最新(2019)斯坦福CS224n深度学习自然语言处理课程(视频+笔记+2017年合集)
+http://web.stanford.edu/class/cs224n/index.html
+2019年https://www.bilibili.com/video/av46216519/?p=9
+2017年https://www.bilibili.com/video/av28030942/
+笔记 https://zhuanlan.zhihu.com/c_1009865189537165312
+笔记 https://blog.csdn.net/cindy_1102/article/category/8804737
+
+徐静 (Jill Tsui):
+lightNLP自然语言处理深度学习框架
+https://github.com/smilelight/lightNLP
+
+(NLP)工具包(Albert+BiLSTM+CRF)
+https://github.com/yongzhuo/Macropodus
+
+
+徐静 (Jill Tsui):
+2018蚂蚁金服NLP用户意图的精准识别，复赛f1 = 0.7327
+
+https://github.com/ziweipolaris/atec2018-nlp
+
+Python自然语言处理相,新词发现，主题模型，隐马尔模型词性标注，Word2Vec，情感分析
+https://github.com/jiangxiaolin/LinLP
+
+
+徐静 (Jill Tsui):
+2019斯坦福CS224n深度学习自然语言处理DeepNLP-models-Pytorch
+https://github.com/DSKSD/DeepNLP-models-Pytorch
+
+
+徐静 (Jill Tsui):
+复盘所有NLP比赛的TOP方案，专注NLP
+https://github.com/ami66/nlp-competitions-list-review
+
+面向深度学习研究人员的自然语言处理实例教
+https://github.com/graykode/nlp-tutorial
+
