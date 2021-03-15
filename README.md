@@ -37,7 +37,9 @@ HomePage: [https://dataxujing.github.io/](https://dataxujing.github.io/)
 * [x] [18.ERNIE](zh-cn/18_ernie.md)
 * [x] [19.NEZHA](zh-cn/19_nezha.md)
 * [x] [20.BERT-WWM](zh-cn/20_bert_wwm.md)
-* [x] [21.SpanBERT](zh-cn/21_spanbert.md.md)
+* [x] [21.SpanBERT](zh-cn/21_spanbert.md)
+* [x] [22.DeBerta](zh-cn/22_deberta.md)
+
 
 
 
