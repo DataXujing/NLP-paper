@@ -37,6 +37,7 @@ HomePage: [https://dataxujing.github.io/](https://dataxujing.github.io/)
 * [20.BERT-WWM](zh-cn/20_bert_wwm.md)
 * [21.SpanBERT](zh-cn/21_spanbert.md)
 * [22.DeBerta](zh-cn/22_deberta.md)
+* [23.ChineseBERT](zh-cn/23_chinesebert.md)
 
 
 

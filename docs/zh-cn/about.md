@@ -49,6 +49,7 @@
 |2020-10-09            |  BERT-WWM                |
 |2020-10-10            |  SpanBERT                |
 |2021-03-15            |  DeBerta                 |
+|2021-09-17 | ChineseBERT |
 
 
 
